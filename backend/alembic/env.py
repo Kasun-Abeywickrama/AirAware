@@ -7,6 +7,7 @@ from app.config import get_settings
 from app.models.base import Base
 from app.models.ingestion_run import IngestionRun
 from app.models.monitoring_location import MonitoringLocation
+from app.models.pm25_observation import Pm25Observation
 
 
 config = context.config
