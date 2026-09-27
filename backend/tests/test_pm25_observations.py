@@ -75,3 +75,26 @@ def test_repository_returns_latest_observation_for_location() -> None:
     )
 
     assert repository.get_latest_for_location(LOCATION_ID) is latest_observation
+
+
+def test_repository_does_not_duplicate_existing_observation() -> None:
+    existing = Pm25Observation(
+        location_id=LOCATION_ID,
+        ingestion_run_id=INGESTION_RUN_ID,
+        observed_at=datetime(2026, 9, 27, 10, tzinfo=timezone.utc),
+        value_ug_m3=Decimal("62.40"),
+        unit="ug/m3",
+    )
+    session = FakeSession(latest_observation=existing)
+    repository = Pm25ObservationRepository(session)
+
+    result, created = repository.create_if_absent(
+        location_id=LOCATION_ID,
+        ingestion_run_id=INGESTION_RUN_ID,
+        observed_at=existing.observed_at,
+        value_ug_m3=Decimal("62.40"),
+    )
+
+    assert result is existing
+    assert created is False
+    assert session.added == []

@@ -45,6 +45,17 @@ python -m alembic current
 
 There are no application tables or migration revisions in this foundation segment.
 
+## Manual live ingestion
+
+Add your private OpenAQ API key to `.env`, then run the following from the repository root:
+
+```powershell
+docker compose exec backend python -m app.setup_station
+docker compose exec backend python -m app.workers.ingest
+```
+
+The command collects PM2.5 from OpenAQ and hourly weather from Open-Meteo. It records separate PM2.5 and weather outcomes and exits with an error if either source fails.
+
 ## Run tests
 
 From the repository root:

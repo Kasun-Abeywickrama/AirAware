@@ -76,3 +76,29 @@ def test_repository_returns_latest_weather_record_for_location() -> None:
     repository = WeatherRecordRepository(FakeSession(latest_record=latest_record))
 
     assert repository.get_latest_for_location(LOCATION_ID) is latest_record
+
+
+def test_repository_does_not_duplicate_existing_weather_record() -> None:
+    existing = WeatherRecord(
+        location_id=LOCATION_ID,
+        ingestion_run_id=INGESTION_RUN_ID,
+        valid_at=datetime(2026, 9, 27, 10, tzinfo=timezone.utc),
+        temperature_c=Decimal("31.50"),
+        humidity_percent=Decimal("72.00"),
+        wind_speed_kmh=Decimal("10.20"),
+    )
+    session = FakeSession(latest_record=existing)
+    repository = WeatherRecordRepository(session)
+
+    result, created = repository.create_if_absent(
+        location_id=LOCATION_ID,
+        ingestion_run_id=INGESTION_RUN_ID,
+        valid_at=existing.valid_at,
+        temperature_c=existing.temperature_c,
+        humidity_percent=existing.humidity_percent,
+        wind_speed_kmh=existing.wind_speed_kmh,
+    )
+
+    assert result is existing
+    assert created is False
+    assert session.added == []

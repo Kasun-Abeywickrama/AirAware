@@ -48,3 +48,35 @@ class WeatherRecordRepository:
             .limit(1)
         )
         return self._session.scalar(statement)
+
+    def create_if_absent(
+        self,
+        *,
+        location_id: UUID,
+        ingestion_run_id: UUID,
+        valid_at: datetime,
+        temperature_c: Decimal,
+        humidity_percent: Decimal,
+        wind_speed_kmh: Decimal,
+    ) -> tuple[WeatherRecord, bool]:
+        """Store an approved weather record unless the location/time already exists."""
+        existing = self._session.scalar(
+            select(WeatherRecord).where(
+                WeatherRecord.location_id == location_id,
+                WeatherRecord.valid_at == valid_at,
+            )
+        )
+        if existing is not None:
+            return existing, False
+
+        return (
+            self.create_approved(
+                location_id=location_id,
+                ingestion_run_id=ingestion_run_id,
+                valid_at=valid_at,
+                temperature_c=temperature_c,
+                humidity_percent=humidity_percent,
+                wind_speed_kmh=wind_speed_kmh,
+            ),
+            True,
+        )

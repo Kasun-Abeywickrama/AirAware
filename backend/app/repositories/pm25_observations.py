@@ -45,3 +45,31 @@ class Pm25ObservationRepository:
             .limit(1)
         )
         return self._session.scalar(statement)
+
+    def create_if_absent(
+        self,
+        *,
+        location_id: UUID,
+        ingestion_run_id: UUID,
+        observed_at: datetime,
+        value_ug_m3: Decimal,
+    ) -> tuple[Pm25Observation, bool]:
+        """Store an approved observation unless the location/time already exists."""
+        existing = self._session.scalar(
+            select(Pm25Observation).where(
+                Pm25Observation.location_id == location_id,
+                Pm25Observation.observed_at == observed_at,
+            )
+        )
+        if existing is not None:
+            return existing, False
+
+        return (
+            self.create_approved(
+                location_id=location_id,
+                ingestion_run_id=ingestion_run_id,
+                observed_at=observed_at,
+                value_ug_m3=value_ug_m3,
+            ),
+            True,
+        )
