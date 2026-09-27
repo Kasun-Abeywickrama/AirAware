@@ -43,7 +43,11 @@ From the `backend` folder, run:
 python -m alembic current
 ```
 
-There are no application tables or migration revisions in this foundation segment.
+This command shows the current migration revision. Apply all migrations in Docker with:
+
+```powershell
+docker compose exec backend python -m alembic upgrade head
+```
 
 ## Manual live ingestion
 
@@ -54,7 +58,9 @@ docker compose exec backend python -m app.setup_station
 docker compose exec backend python -m app.workers.ingest
 ```
 
-The command collects PM2.5 from OpenAQ and hourly weather from Open-Meteo. It records separate PM2.5 and weather outcomes and exits with an error if either source fails.
+The command collects the latest PM2.5 value plus seven days of hourly PM2.5 history from OpenAQ. It also collects the full weather inputs required by the packaged operational models from Open-Meteo. It records separate PM2.5 and weather outcomes and exits with an error if either source fails.
+
+The backend does not generate forecasts yet. The next milestone adds the existing trained AirAware model artifacts after live input readiness is confirmed.
 
 ## Run tests
 

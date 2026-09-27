@@ -33,30 +33,48 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
     events = SystemEventRepository(session)
     run = runs.start("pm25")
     try:
-        reading = OpenAQAdapter(settings).latest_pm25()
-        value = validate_pm25_input(
-            value_ug_m3=reading.value_ug_m3,
-            unit=reading.unit,
-            observed_at=reading.observed_at,
-        )
-        if datetime.now(timezone.utc) - reading.observed_at > timedelta(
+        adapter = OpenAQAdapter(settings)
+        latest = adapter.latest_pm25()
+        if datetime.now(timezone.utc) - latest.observed_at > timedelta(
             minutes=settings.maximum_observation_age_minutes
         ):
             raise InputValidationError("PM2.5 observation is stale.")
-        _, created = Pm25ObservationRepository(session).create_if_absent(
-            location_id=location_id,
-            ingestion_run_id=run.id,
-            observed_at=reading.observed_at,
-            value_ug_m3=value,
-        )
+
+        readings_by_time = {
+            reading.observed_at: reading
+            for reading in adapter.hourly_pm25_history(settings.pm25_history_hours)
+        }
+        readings_by_time[latest.observed_at] = latest
+        validated_readings = [
+            (
+                reading.observed_at,
+                validate_pm25_input(
+                    value_ug_m3=reading.value_ug_m3,
+                    unit=reading.unit,
+                    observed_at=reading.observed_at,
+                ),
+            )
+            for reading in readings_by_time.values()
+        ]
+
+        repository = Pm25ObservationRepository(session)
+        created_count = 0
+        for observed_at, value in validated_readings:
+            _, created = repository.create_if_absent(
+                location_id=location_id,
+                ingestion_run_id=run.id,
+                observed_at=observed_at,
+                value_ug_m3=value,
+            )
+            created_count += int(created)
         runs.mark_succeeded(run)
         events.record(
             component="pm25_ingestion",
             level="info",
             message=(
                 "PM2.5 ingestion completed."
-                if created
-                else "PM2.5 ingestion completed with no new observation."
+                if created_count
+                else "PM2.5 ingestion completed with no new observations."
             ),
         )
         session.commit()
@@ -78,22 +96,38 @@ def _ingest_weather(session, location_id, settings: Settings) -> bool:
     run = runs.start("weather")
     try:
         readings = OpenMeteoAdapter(settings).hourly_weather()
+        validated_readings = [
+            (
+                reading,
+                validate_weather_input(
+                    temperature_c=reading.temperature_c,
+                    humidity_percent=reading.humidity_percent,
+                    wind_speed_kmh=reading.wind_speed_kmh,
+                    dew_point_c=reading.dew_point_c,
+                    surface_pressure_hpa=reading.surface_pressure_hpa,
+                    precipitation_mm=reading.precipitation_mm,
+                    shortwave_radiation_w_m2=reading.shortwave_radiation_w_m2,
+                    wind_direction_degrees=reading.wind_direction_degrees,
+                    valid_at=reading.valid_at,
+                ),
+            )
+            for reading in readings
+        ]
         repository = WeatherRecordRepository(session)
         created_count = 0
-        for reading in readings:
-            temperature, humidity, wind_speed = validate_weather_input(
-                temperature_c=reading.temperature_c,
-                humidity_percent=reading.humidity_percent,
-                wind_speed_kmh=reading.wind_speed_kmh,
-                valid_at=reading.valid_at,
-            )
-            _, created = repository.create_if_absent(
+        for reading, values in validated_readings:
+            _, created = repository.create_or_update(
                 location_id=location_id,
                 ingestion_run_id=run.id,
                 valid_at=reading.valid_at,
-                temperature_c=temperature,
-                humidity_percent=humidity,
-                wind_speed_kmh=wind_speed,
+                temperature_c=values[0],
+                humidity_percent=values[1],
+                wind_speed_kmh=values[2],
+                dew_point_c=values[3],
+                surface_pressure_hpa=values[4],
+                precipitation_mm=values[5],
+                shortwave_radiation_w_m2=values[6],
+                wind_direction_degrees=values[7],
             )
             created_count += int(created)
         runs.mark_succeeded(run)

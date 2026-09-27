@@ -35,9 +35,10 @@ def test_weather_record_has_required_constraints() -> None:
     assert "uq_weather_records_location_valid_at" in constraint_names
     assert "ck_weather_records_humidity_range" in constraint_names
     assert "ck_weather_records_non_negative_wind_speed" in constraint_names
+    assert "ck_weather_records_wind_direction_range" in constraint_names
     assert sum(isinstance(item, ForeignKeyConstraint) for item in table.constraints) == 2
     assert sum(isinstance(item, UniqueConstraint) for item in table.constraints) == 1
-    assert sum(isinstance(item, CheckConstraint) for item in table.constraints) == 2
+    assert sum(isinstance(item, CheckConstraint) for item in table.constraints) == 6
 
 
 def test_repository_creates_approved_weather_record() -> None:
@@ -52,6 +53,11 @@ def test_repository_creates_approved_weather_record() -> None:
         temperature_c=Decimal("31.50"),
         humidity_percent=Decimal("72.00"),
         wind_speed_kmh=Decimal("10.20"),
+        dew_point_c=Decimal("25.00"),
+        surface_pressure_hpa=Decimal("1004.00"),
+        precipitation_mm=Decimal("0.00"),
+        shortwave_radiation_w_m2=Decimal("500.00"),
+        wind_direction_degrees=Decimal("180.00"),
     )
 
     assert record.location_id == LOCATION_ID
@@ -60,6 +66,7 @@ def test_repository_creates_approved_weather_record() -> None:
     assert record.temperature_c == Decimal("31.50")
     assert record.humidity_percent == Decimal("72.00")
     assert record.wind_speed_kmh == Decimal("10.20")
+    assert record.dew_point_c == Decimal("25.00")
     assert session.added == [record]
     assert session.flush_count == 1
 
@@ -78,7 +85,7 @@ def test_repository_returns_latest_weather_record_for_location() -> None:
     assert repository.get_latest_for_location(LOCATION_ID) is latest_record
 
 
-def test_repository_does_not_duplicate_existing_weather_record() -> None:
+def test_repository_refreshes_existing_weather_record() -> None:
     existing = WeatherRecord(
         location_id=LOCATION_ID,
         ingestion_run_id=INGESTION_RUN_ID,
@@ -90,15 +97,21 @@ def test_repository_does_not_duplicate_existing_weather_record() -> None:
     session = FakeSession(latest_record=existing)
     repository = WeatherRecordRepository(session)
 
-    result, created = repository.create_if_absent(
+    result, created = repository.create_or_update(
         location_id=LOCATION_ID,
         ingestion_run_id=INGESTION_RUN_ID,
         valid_at=existing.valid_at,
         temperature_c=existing.temperature_c,
         humidity_percent=existing.humidity_percent,
         wind_speed_kmh=existing.wind_speed_kmh,
+        dew_point_c=Decimal("25.00"),
+        surface_pressure_hpa=Decimal("1004.00"),
+        precipitation_mm=Decimal("0.00"),
+        shortwave_radiation_w_m2=Decimal("500.00"),
+        wind_direction_degrees=Decimal("180.00"),
     )
 
     assert result is existing
     assert created is False
     assert session.added == []
+    assert session.flush_count == 1

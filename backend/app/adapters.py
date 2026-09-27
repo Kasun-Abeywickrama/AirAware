@@ -1,7 +1,7 @@
 """Live PM2.5 and weather provider adapters."""
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import httpx
@@ -26,6 +26,11 @@ class WeatherReading:
     temperature_c: Decimal
     humidity_percent: Decimal
     wind_speed_kmh: Decimal
+    dew_point_c: Decimal
+    surface_pressure_hpa: Decimal
+    precipitation_mm: Decimal
+    shortwave_radiation_w_m2: Decimal
+    wind_direction_degrees: Decimal
 
 
 class OpenAQAdapter:
@@ -85,12 +90,71 @@ class OpenAQAdapter:
 
         return Pm25Reading(timestamp, decimal_value, canonical_unit)
 
+    def hourly_pm25_history(self, hours: int) -> list[Pm25Reading]:
+        """Return recent OpenAQ hourly PM2.5 values for model input history."""
+        if not self._settings.openaq_api_key:
+            raise ProviderError("OpenAQ is not configured.")
+        if hours < 1:
+            raise ValueError("hours must be positive.")
+
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(hours=hours)
+        try:
+            with httpx.Client(timeout=self._settings.provider_timeout_seconds) as client:
+                response = client.get(
+                    f"{self.base_url}/sensors/{self._settings.openaq_sensor_id}/hours",
+                    headers={"X-API-Key": self._settings.openaq_api_key},
+                    params={
+                        "datetime_from": start.isoformat().replace("+00:00", "Z"),
+                        "datetime_to": end.isoformat().replace("+00:00", "Z"),
+                        "limit": 1000,
+                        "page": 1,
+                    },
+                )
+        except httpx.HTTPError as error:
+            raise ProviderError("OpenAQ history request failed.") from error
+
+        if response.status_code != 200:
+            raise ProviderError("OpenAQ history is unavailable.")
+
+        readings: list[Pm25Reading] = []
+        try:
+            for item in response.json().get("results", []):
+                period = item.get("period", {})
+                observed_at = period.get("datetimeTo", {}).get("utc")
+                value = item.get("value")
+                unit = item.get("parameter", {}).get("units") or item.get("unit", "")
+                if observed_at is None or value is None:
+                    continue
+                readings.append(
+                    Pm25Reading(
+                        observed_at=_parse_utc_timestamp(observed_at),
+                        value_ug_m3=Decimal(str(value)),
+                        unit=_canonical_pm25_unit(str(unit)),
+                    )
+                )
+        except (TypeError, ValueError) as error:
+            raise ProviderError("OpenAQ returned invalid PM2.5 history.") from error
+
+        if not readings:
+            raise ProviderError("OpenAQ returned no PM2.5 history.")
+        return sorted(readings, key=lambda item: item.observed_at)
+
 
 class OpenMeteoAdapter:
     """Fetch UTC hourly weather values from Open-Meteo."""
 
     url = "https://api.open-meteo.com/v1/forecast"
-    variables = ("temperature_2m", "relative_humidity_2m", "wind_speed_10m")
+    variables = (
+        "temperature_2m",
+        "relative_humidity_2m",
+        "wind_speed_10m",
+        "dew_point_2m",
+        "surface_pressure",
+        "precipitation",
+        "shortwave_radiation",
+        "wind_direction_10m",
+    )
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
@@ -134,6 +198,11 @@ class OpenMeteoAdapter:
                         temperature_c=Decimal(str(values[0][index])),
                         humidity_percent=Decimal(str(values[1][index])),
                         wind_speed_kmh=Decimal(str(values[2][index])),
+                        dew_point_c=Decimal(str(values[3][index])),
+                        surface_pressure_hpa=Decimal(str(values[4][index])),
+                        precipitation_mm=Decimal(str(values[5][index])),
+                        shortwave_radiation_w_m2=Decimal(str(values[6][index])),
+                        wind_direction_degrees=Decimal(str(values[7][index])),
                     )
                 )
         except (TypeError, ValueError) as error:
@@ -148,3 +217,8 @@ def _canonical_pm25_unit(unit: str) -> str:
     if unit.strip() in {"ug/m3", "µg/m³", "µg/m3", "ug/m³"}:
         return "ug/m3"
     raise ProviderError("OpenAQ returned an unsupported PM2.5 unit.")
+
+
+def _parse_utc_timestamp(value: str) -> datetime:
+    timestamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    return timestamp.replace(tzinfo=timezone.utc) if timestamp.tzinfo is None else timestamp

@@ -19,6 +19,7 @@ def settings(*, api_key: str | None = "test-key") -> Settings:
         station_timezone="Asia/Kolkata",
         provider_timeout_seconds=20,
         maximum_observation_age_minutes=180,
+        pm25_history_hours=168,
     )
 
 
@@ -101,6 +102,11 @@ def test_open_meteo_adapter_returns_hourly_weather(monkeypatch) -> None:
                 "temperature_2m": [31.5, 32.0],
                 "relative_humidity_2m": [72, 70],
                 "wind_speed_10m": [10.2, 11.0],
+                "dew_point_2m": [26.0, 26.1],
+                "surface_pressure": [1004.5, 1004.3],
+                "precipitation": [0, 0.2],
+                "shortwave_radiation": [500, 420],
+                "wind_direction_10m": [180, 190],
             }
         },
     )
@@ -112,6 +118,30 @@ def test_open_meteo_adapter_returns_hourly_weather(monkeypatch) -> None:
     assert readings[0].temperature_c == Decimal("31.5")
     assert readings[0].humidity_percent == Decimal("72")
     assert readings[0].wind_speed_kmh == Decimal("10.2")
+    assert readings[0].surface_pressure_hpa == Decimal("1004.5")
+    assert readings[1].wind_direction_degrees == Decimal("190")
+
+
+def test_openaq_adapter_returns_recent_hourly_history(monkeypatch) -> None:
+    response = FakeResponse(
+        200,
+        {
+            "results": [
+                {
+                    "value": 61.2,
+                    "period": {"datetimeTo": {"utc": "2026-09-27T09:00:00Z"}},
+                    "parameter": {"units": "µg/m³"},
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(adapters.httpx, "Client", lambda timeout: FakeClient(response))
+
+    readings = OpenAQAdapter(settings()).hourly_pm25_history(168)
+
+    assert len(readings) == 1
+    assert readings[0].value_ug_m3 == Decimal("61.2")
+    assert readings[0].unit == "ug/m3"
 
 
 def test_open_meteo_adapter_rejects_malformed_payload(monkeypatch) -> None:

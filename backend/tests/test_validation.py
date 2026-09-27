@@ -49,10 +49,18 @@ def test_future_weather_input_is_allowed() -> None:
         temperature_c="31.5",
         humidity_percent="72",
         wind_speed_kmh="10.2",
+        dew_point_c="25.0",
+        surface_pressure_hpa="1004",
+        precipitation_mm="0",
+        shortwave_radiation_w_m2="500",
+        wind_direction_degrees="180",
         valid_at=NOW + timedelta(days=1),
     )
 
-    assert values == (Decimal("31.5"), Decimal("72"), Decimal("10.2"))
+    assert values == (
+        Decimal("31.5"), Decimal("72"), Decimal("10.2"), Decimal("25.0"),
+        Decimal("1004"), Decimal("0"), Decimal("500"), Decimal("180"),
+    )
 
 
 @pytest.mark.parametrize(
@@ -77,5 +85,40 @@ def test_invalid_weather_input_is_rejected(
             temperature_c=temperature,
             humidity_percent=humidity,
             wind_speed_kmh=wind_speed,
+            dew_point_c=25,
+            surface_pressure_hpa=1004,
+            precipitation_mm=0,
+            shortwave_radiation_w_m2=500,
+            wind_direction_degrees=180,
             valid_at=valid_at,
+        )
+
+
+@pytest.mark.parametrize(
+    ("surface_pressure", "precipitation", "radiation", "wind_direction", "message"),
+    [
+        (0, 0, 0, 180, "Surface pressure must be positive"),
+        (1004, -1, 0, 180, "Precipitation cannot be negative"),
+        (1004, 0, -1, 180, "Shortwave radiation cannot be negative"),
+        (1004, 0, 0, 361, "Wind direction must be between 0 and 360"),
+    ],
+)
+def test_invalid_model_weather_fields_are_rejected(
+    surface_pressure,
+    precipitation,
+    radiation,
+    wind_direction,
+    message,
+) -> None:
+    with pytest.raises(InputValidationError, match=message):
+        validate_weather_input(
+            temperature_c=31,
+            humidity_percent=72,
+            wind_speed_kmh=10,
+            dew_point_c=25,
+            surface_pressure_hpa=surface_pressure,
+            precipitation_mm=precipitation,
+            shortwave_radiation_w_m2=radiation,
+            wind_direction_degrees=wind_direction,
+            valid_at=NOW,
         )

@@ -26,6 +26,7 @@ class Settings:
     station_timezone: str
     provider_timeout_seconds: float
     maximum_observation_age_minutes: int
+    pm25_history_hours: int
 
 
 @lru_cache
@@ -34,6 +35,10 @@ def get_settings() -> Settings:
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise RuntimeError("DATABASE_URL must be configured.")
+
+    pm25_history_hours = int(os.getenv("PM25_HISTORY_HOURS", "168"))
+    if pm25_history_hours < 168:
+        raise RuntimeError("PM25_HISTORY_HOURS must be at least 168 for the packaged models.")
 
     return Settings(
         database_url=database_url,
@@ -48,4 +53,5 @@ def get_settings() -> Settings:
         maximum_observation_age_minutes=int(
             os.getenv("MAXIMUM_OBSERVATION_AGE_MINUTES", "180")
         ),
+        pm25_history_hours=pm25_history_hours,
     )

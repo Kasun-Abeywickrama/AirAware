@@ -26,6 +26,7 @@ def settings() -> Settings:
         station_timezone="Asia/Kolkata",
         provider_timeout_seconds=20,
         maximum_observation_age_minutes=180,
+        pm25_history_hours=168,
     )
 
 
@@ -91,7 +92,7 @@ class FakeWeatherRepository:
     def __init__(self, session):
         self.session = session
 
-    def create_if_absent(self, **kwargs):
+    def create_or_update(self, **kwargs):
         return SimpleNamespace(**kwargs), True
 
 
@@ -114,9 +115,19 @@ def test_manual_ingestion_records_success_for_both_sources(monkeypatch) -> None:
         lambda self: Pm25Reading(NOW, Decimal("62.4"), "ug/m3"),
     )
     monkeypatch.setattr(
+        ingest.OpenAQAdapter,
+        "hourly_pm25_history",
+        lambda self, hours: [Pm25Reading(NOW, Decimal("62.4"), "ug/m3")],
+    )
+    monkeypatch.setattr(
         ingest.OpenMeteoAdapter,
         "hourly_weather",
-        lambda self: [WeatherReading(NOW, Decimal("31.5"), Decimal("72"), Decimal("10.2"))],
+        lambda self: [
+            WeatherReading(
+                NOW, Decimal("31.5"), Decimal("72"), Decimal("10.2"), Decimal("25"),
+                Decimal("1004"), Decimal("0"), Decimal("500"), Decimal("180"),
+            )
+        ],
     )
 
     assert ingest.ingest_all(settings()) is True
@@ -136,10 +147,16 @@ def test_weather_runs_even_when_pm25_provider_fails(monkeypatch) -> None:
         raise ProviderError("OpenAQ request failed.")
 
     monkeypatch.setattr(ingest.OpenAQAdapter, "latest_pm25", failed_pm25)
+    monkeypatch.setattr(ingest.OpenAQAdapter, "hourly_pm25_history", lambda self, hours: [])
     monkeypatch.setattr(
         ingest.OpenMeteoAdapter,
         "hourly_weather",
-        lambda self: [WeatherReading(NOW, Decimal("31.5"), Decimal("72"), Decimal("10.2"))],
+        lambda self: [
+            WeatherReading(
+                NOW, Decimal("31.5"), Decimal("72"), Decimal("10.2"), Decimal("25"),
+                Decimal("1004"), Decimal("0"), Decimal("500"), Decimal("180"),
+            )
+        ],
     )
 
     assert ingest.ingest_all(settings()) is False
