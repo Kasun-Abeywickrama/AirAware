@@ -4,6 +4,8 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.config import get_settings
+from app.models.base import Base
+from app.models.monitoring_location import MonitoringLocation
 
 
 config = context.config
@@ -12,8 +14,8 @@ config.set_main_option("sqlalchemy.url", get_settings().database_url)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Application tables are intentionally introduced in a later segment.
-target_metadata = None
+# Importing models above registers their tables in the shared metadata.
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
