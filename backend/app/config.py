@@ -27,6 +27,7 @@ class Settings:
     provider_timeout_seconds: float
     maximum_observation_age_minutes: int
     pm25_history_hours: int
+    model_artifact_directory: Path = PROJECT_ROOT / "backend" / "model_artifacts"
 
 
 @lru_cache
@@ -39,6 +40,15 @@ def get_settings() -> Settings:
     pm25_history_hours = int(os.getenv("PM25_HISTORY_HOURS", "168"))
     if pm25_history_hours < 168:
         raise RuntimeError("PM25_HISTORY_HOURS must be at least 168 for the packaged models.")
+
+    configured_model_directory = Path(
+        os.getenv("MODEL_ARTIFACT_DIRECTORY", "backend/model_artifacts")
+    )
+    model_artifact_directory = (
+        configured_model_directory
+        if configured_model_directory.is_absolute()
+        else PROJECT_ROOT / configured_model_directory
+    )
 
     return Settings(
         database_url=database_url,
@@ -54,4 +64,5 @@ def get_settings() -> Settings:
             os.getenv("MAXIMUM_OBSERVATION_AGE_MINUTES", "180")
         ),
         pm25_history_hours=pm25_history_hours,
+        model_artifact_directory=model_artifact_directory,
     )

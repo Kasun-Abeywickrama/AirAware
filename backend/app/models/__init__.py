@@ -8,8 +8,12 @@ from .weather_record import WeatherRecord
 
 __all__ = [
     "IngestionRun",
+    "Forecast",
+    "ForecastRun",
     "MonitoringLocation",
     "Pm25Observation",
     "SystemEvent",
     "WeatherRecord",
 ]
+from .forecast import Forecast
+from .forecast_run import ForecastRun

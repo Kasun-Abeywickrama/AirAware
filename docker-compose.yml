@@ -17,11 +17,14 @@ services:
       PROVIDER_TIMEOUT_SECONDS: ${PROVIDER_TIMEOUT_SECONDS:-20}
       MAXIMUM_OBSERVATION_AGE_MINUTES: ${MAXIMUM_OBSERVATION_AGE_MINUTES:-180}
       PM25_HISTORY_HOURS: ${PM25_HISTORY_HOURS:-168}
+      MODEL_ARTIFACT_DIRECTORY: /app/model_artifacts
     ports:
       - "${PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./backend/model_artifacts:/app/model_artifacts:ro
 
   postgres:
     image: postgres:17-alpine
