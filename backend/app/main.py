@@ -2,12 +2,14 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from . import database
+from .api.routes.status import router as status_router
 
 app = FastAPI(
     title="AirAware API",
     description="Backend API for the AirAware PM2.5 decision-support application.",
     version="0.1.0",
 )
+app.include_router(status_router)
 
 
 @app.get("/health", tags=["System"])
