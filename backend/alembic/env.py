@@ -8,6 +8,7 @@ from app.models.base import Base
 from app.models.ingestion_run import IngestionRun
 from app.models.monitoring_location import MonitoringLocation
 from app.models.pm25_observation import Pm25Observation
+from app.models.weather_record import WeatherRecord
 
 
 config = context.config
