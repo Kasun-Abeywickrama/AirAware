@@ -8,6 +8,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .. import database
 from ..models.ingestion_run import IngestionRun
+from ..models.forecast_run import ForecastRun
+from ..repositories.forecast_runs import ForecastRunRepository
 from ..repositories.ingestion_runs import IngestionRunRepository
 
 
@@ -24,6 +26,7 @@ class PublicStatusPayload(TypedDict):
     database: Literal["connected", "unreachable"]
     pm25: SourceStatus
     weather: SourceStatus
+    forecast: SourceStatus
 
 
 @dataclass(frozen=True)
@@ -50,6 +53,7 @@ def build_public_status(
     database_connected: bool,
     pm25_run: IngestionRun | None = None,
     weather_run: IngestionRun | None = None,
+    forecast_run: ForecastRun | None = None,
 ) -> PublicStatusResult:
     """Build a public status response without exposing diagnostic details."""
     if not database_connected:
@@ -61,14 +65,20 @@ def build_public_status(
                 "database": "unreachable",
                 "pm25": unavailable,
                 "weather": unavailable,
+                "forecast": unavailable,
             },
         )
 
     pm25 = source_status(pm25_run)
     weather = source_status(weather_run)
+    forecast = source_status(forecast_run)
     overall_status: Literal["available", "limited"] = (
         "available"
-        if pm25["status"] == "available" and weather["status"] == "available"
+        if (
+            pm25["status"] == "available"
+            and weather["status"] == "available"
+            and forecast["status"] == "available"
+        )
         else "limited"
     )
     return PublicStatusResult(
@@ -78,6 +88,7 @@ def build_public_status(
             "database": "connected",
             "pm25": pm25,
             "weather": weather,
+            "forecast": forecast,
         },
     )
 
@@ -95,6 +106,7 @@ def get_public_status() -> PublicStatusResult:
                 database_connected=True,
                 pm25_run=repository.get_latest("pm25"),
                 weather_run=repository.get_latest("weather"),
+                forecast_run=ForecastRunRepository(session).get_latest(),
             )
         finally:
             session.close()

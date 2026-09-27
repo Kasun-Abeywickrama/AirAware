@@ -42,3 +42,8 @@ class ForecastRunRepository:
             .order_by(ForecastRun.issued_at.desc())
             .limit(1)
         )
+
+    def get_latest(self) -> ForecastRun | None:
+        return self._session.scalar(
+            select(ForecastRun).order_by(ForecastRun.issued_at.desc()).limit(1)
+        )

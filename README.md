@@ -19,6 +19,14 @@ Stop the containers with `docker compose down`.
 
 The database readiness check is available at `http://localhost:8000/health/database`.
 
+Public user-data endpoints:
+
+- `GET /api/v1/status`
+- `GET /api/v1/current-conditions`
+- `GET /api/v1/forecasts/latest`
+
+When live data or forecasts are not ready, the last two endpoints return a safe HTTP 503 JSON response rather than old or unreliable values.
+
 ## Run the backend locally
 
 Install dependencies:
