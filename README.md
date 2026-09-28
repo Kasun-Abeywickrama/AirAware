@@ -17,6 +17,8 @@ AirAware is a New Delhi PM2.5 decision-support web application. This repository 
 
 Stop the containers with `docker compose down`.
 
+Docker Compose also starts an operational worker. It runs ingestion and guarded forecast generation immediately, then repeats every hour. Change `WORKER_INTERVAL_SECONDS` in your private `.env` only for development testing.
+
 The database readiness check is available at `http://localhost:8000/health/database`.
 
 Public user-data endpoints:

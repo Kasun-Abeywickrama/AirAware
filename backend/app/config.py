@@ -28,6 +28,7 @@ class Settings:
     maximum_observation_age_minutes: int
     pm25_history_hours: int
     model_artifact_directory: Path = PROJECT_ROOT / "backend" / "model_artifacts"
+    worker_interval_seconds: int = 3600
 
 
 @lru_cache
@@ -40,6 +41,9 @@ def get_settings() -> Settings:
     pm25_history_hours = int(os.getenv("PM25_HISTORY_HOURS", "168"))
     if pm25_history_hours < 168:
         raise RuntimeError("PM25_HISTORY_HOURS must be at least 168 for the packaged models.")
+    worker_interval_seconds = int(os.getenv("WORKER_INTERVAL_SECONDS", "3600"))
+    if worker_interval_seconds < 60:
+        raise RuntimeError("WORKER_INTERVAL_SECONDS must be at least 60.")
 
     configured_model_directory = Path(
         os.getenv("MODEL_ARTIFACT_DIRECTORY", "backend/model_artifacts")
@@ -65,4 +69,5 @@ def get_settings() -> Settings:
         ),
         pm25_history_hours=pm25_history_hours,
         model_artifact_directory=model_artifact_directory,
+        worker_interval_seconds=worker_interval_seconds,
     )
