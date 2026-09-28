@@ -73,3 +73,15 @@ class Pm25ObservationRepository:
             ),
             True,
         )
+
+    def list_since(self, *, location_id: UUID, since: datetime) -> list[Pm25Observation]:
+        """Return approved observations in ascending time order for a chart."""
+        statement = (
+            select(Pm25Observation)
+            .where(
+                Pm25Observation.location_id == location_id,
+                Pm25Observation.observed_at >= since,
+            )
+            .order_by(Pm25Observation.observed_at)
+        )
+        return list(self._session.scalars(statement).all())

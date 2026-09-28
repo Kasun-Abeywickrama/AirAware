@@ -5,6 +5,8 @@ from . import database
 from .api.routes.status import router as status_router
 from .api.routes.conditions import router as conditions_router
 from .api.routes.forecasts import router as forecasts_router
+from .api.routes.activity_plans import router as activity_plans_router
+from .api.routes.alert_preferences import router as alert_preferences_router
 
 app = FastAPI(
     title="AirAware API",
@@ -14,6 +16,8 @@ app = FastAPI(
 app.include_router(status_router)
 app.include_router(conditions_router)
 app.include_router(forecasts_router)
+app.include_router(activity_plans_router)
+app.include_router(alert_preferences_router)
 
 
 @app.get("/health", tags=["System"])

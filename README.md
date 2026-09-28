@@ -26,8 +26,14 @@ Public user-data endpoints:
 - `GET /api/v1/status`
 - `GET /api/v1/current-conditions`
 - `GET /api/v1/forecasts/latest`
+- `GET /api/v1/forecasts/history?hours=72`
+- `POST /api/v1/activity-plans`
+- `GET /api/v1/alert-preferences/{browser_id}`
+- `PUT /api/v1/alert-preferences/{browser_id}`
 
-When live data or forecasts are not ready, the last two endpoints return a safe HTTP 503 JSON response rather than old or unreliable values.
+When live data, forecasts, history, or planning results are not ready, their endpoints return a safe HTTP 503 JSON response rather than old or unreliable values.
+
+Activity plans use a New Delhi local date and a whole-hour duration. They compare forecast windows only and are not safety or medical advice. Alert preferences are anonymous browser UUID settings; AirAware does not send notifications in this version.
 
 ## Run the backend locally
 

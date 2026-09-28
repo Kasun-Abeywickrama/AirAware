@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models.forecast import Forecast
+from ..models.forecast_run import ForecastRun
 
 
 class ForecastRepository:
@@ -45,3 +46,29 @@ class ForecastRepository:
             .order_by(Forecast.horizon_hours)
         )
         return list(self._session.scalars(statement).all())
+
+    def list_since(self, since: datetime) -> list[tuple[Forecast, ForecastRun]]:
+        """Return forecast outputs with their issue times for a recent history view."""
+        statement = (
+            select(Forecast, ForecastRun)
+            .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+            .where(Forecast.target_at >= since, ForecastRun.status == "succeeded")
+            .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        )
+        return list(self._session.execute(statement).all())
+
+    def list_for_target_range(
+        self, *, start_at: datetime, end_at: datetime
+    ) -> list[tuple[Forecast, ForecastRun]]:
+        """Return successful forecasts within a target-time range."""
+        statement = (
+            select(Forecast, ForecastRun)
+            .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+            .where(
+                Forecast.target_at >= start_at,
+                Forecast.target_at < end_at,
+                ForecastRun.status == "succeeded",
+            )
+            .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        )
+        return list(self._session.execute(statement).all())

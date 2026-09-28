@@ -1,5 +1,8 @@
 """Database models for AirAware."""
 
+from .alert_preference import AlertPreference
+from .forecast import Forecast
+from .forecast_run import ForecastRun
 from .ingestion_run import IngestionRun
 from .monitoring_location import MonitoringLocation
 from .pm25_observation import Pm25Observation
@@ -8,6 +11,7 @@ from .weather_record import WeatherRecord
 
 __all__ = [
     "IngestionRun",
+    "AlertPreference",
     "Forecast",
     "ForecastRun",
     "MonitoringLocation",
@@ -15,5 +19,3 @@ __all__ = [
     "SystemEvent",
     "WeatherRecord",
 ]
-from .forecast import Forecast
-from .forecast_run import ForecastRun
