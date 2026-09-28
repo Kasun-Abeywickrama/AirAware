@@ -42,7 +42,10 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
 
         readings_by_time = {
             reading.observed_at: reading
-            for reading in adapter.hourly_pm25_history(settings.pm25_history_hours)
+            # The model needs 169 local hourly PM2.5 points (current hour plus
+            # 168 lags). New Delhi's UTC offset is 30 minutes, and OpenAQ's
+            # end-boundary aggregation can omit the first requested hour.
+            for reading in adapter.hourly_pm25_history(settings.pm25_history_hours + 2)
         }
         readings_by_time[latest.observed_at] = latest
         validated_readings = [

@@ -33,8 +33,8 @@ class FakeResponse:
 
 
 class FakeClient:
-    def __init__(self, response: FakeResponse):
-        self.response = response
+    def __init__(self, responses: FakeResponse | list[FakeResponse]):
+        self.responses = responses if isinstance(responses, list) else [responses]
 
     def __enter__(self):
         return self
@@ -43,11 +43,15 @@ class FakeClient:
         return None
 
     def get(self, url, **kwargs):
-        return self.response
+        return self.responses.pop(0)
 
 
 def test_openaq_adapter_normalizes_valid_pm25_reading(monkeypatch) -> None:
-    response = FakeResponse(
+    metadata_response = FakeResponse(
+        200,
+        {"results": [{"parameter": {"name": "pm25", "units": "µg/m³"}}]},
+    )
+    latest_response = FakeResponse(
         200,
         {
             "results": [
@@ -55,12 +59,15 @@ def test_openaq_adapter_normalizes_valid_pm25_reading(monkeypatch) -> None:
                     "sensorsId": 23534,
                     "value": 62.4,
                     "datetime": {"utc": "2026-09-27T10:00:00Z"},
-                    "parameter": {"units": "µg/m³"},
                 }
             ]
         },
     )
-    monkeypatch.setattr(adapters.httpx, "Client", lambda timeout: FakeClient(response))
+    monkeypatch.setattr(
+        adapters.httpx,
+        "Client",
+        lambda timeout: FakeClient([metadata_response, latest_response]),
+    )
 
     reading = OpenAQAdapter(settings()).latest_pm25()
 

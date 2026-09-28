@@ -119,6 +119,7 @@ def test_forecast_repositories_create_run_and_output() -> None:
 def test_packaged_model_service_generates_all_horizons(monkeypatch) -> None:
     service = PackagedModelService(settings())
     pm25, weather = input_records()
+    weather = weather[:24]
     monkeypatch.setattr(service, "_verify_artifacts", lambda: None)
     monkeypatch.setattr(forecasting.joblib, "load", lambda path: FakeTree())
     monkeypatch.setattr(service, "_predict_gru", lambda filename, sequence: 80.0)

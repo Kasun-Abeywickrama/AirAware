@@ -11,6 +11,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY model_manifest.json ./
 
 EXPOSE 8000
 

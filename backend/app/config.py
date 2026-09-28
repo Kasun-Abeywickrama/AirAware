@@ -57,11 +57,11 @@ def get_settings() -> Settings:
     return Settings(
         database_url=database_url,
         openaq_api_key=os.getenv("OPENAQ_API_KEY") or None,
-        openaq_location_id=int(os.getenv("OPENAQ_LOCATION_ID", "8118")),
-        openaq_sensor_id=int(os.getenv("OPENAQ_SENSOR_ID", "23534")),
-        station_name=os.getenv("STATION_NAME", "New Delhi PM2.5 Station"),
-        station_latitude=float(os.getenv("STATION_LATITUDE", "28.63576")),
-        station_longitude=float(os.getenv("STATION_LONGITUDE", "77.22445")),
+        openaq_location_id=int(os.getenv("OPENAQ_LOCATION_ID", "6145551")),
+        openaq_sensor_id=int(os.getenv("OPENAQ_SENSOR_ID", "14745878")),
+        station_name=os.getenv("STATION_NAME", "Anand Lok, New Delhi"),
+        station_latitude=float(os.getenv("STATION_LATITUDE", "28.5587")),
+        station_longitude=float(os.getenv("STATION_LONGITUDE", "77.21886")),
         station_timezone=os.getenv("STATION_TIMEZONE", "Asia/Kolkata"),
         provider_timeout_seconds=float(os.getenv("PROVIDER_TIMEOUT_SECONDS", "20")),
         maximum_observation_age_minutes=int(

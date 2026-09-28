@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from backend.app.config import Settings
 from backend.app.models.pm25_observation import Pm25Observation
@@ -71,7 +72,9 @@ def test_forecast_inputs_are_ready_for_packaged_models() -> None:
 
     assert result.ready is True
     assert result.reason is None
-    assert result.issue_at == ISSUE_AT
+    assert result.issue_at == ISSUE_AT.astimezone(ZoneInfo("Asia/Kolkata")).replace(
+        minute=0, second=0, microsecond=0
+    )
 
 
 def test_forecast_inputs_reject_missing_pm25_history() -> None:

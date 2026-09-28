@@ -47,6 +47,7 @@ class OpenAQAdapter:
 
         try:
             with httpx.Client(timeout=self._settings.provider_timeout_seconds) as client:
+                canonical_unit = self._configured_pm25_unit(client)
                 response = client.get(
                     f"{self.base_url}/locations/{self._settings.openaq_location_id}/latest",
                     headers={"X-API-Key": self._settings.openaq_api_key},
@@ -75,11 +76,9 @@ class OpenAQAdapter:
         if isinstance(value, dict):
             value = value.get("value")
         observed_at = item.get("datetime", {}).get("utc")
-        unit = item.get("parameter", {}).get("units") or item.get("unit", "")
         if value is None or not observed_at:
             raise ProviderError("OpenAQ returned an incomplete PM2.5 reading.")
 
-        canonical_unit = _canonical_pm25_unit(str(unit))
         try:
             timestamp = datetime.fromisoformat(str(observed_at).replace("Z", "+00:00"))
             decimal_value = Decimal(str(value))
@@ -89,6 +88,26 @@ class OpenAQAdapter:
             timestamp = timestamp.replace(tzinfo=timezone.utc)
 
         return Pm25Reading(timestamp, decimal_value, canonical_unit)
+
+    def _configured_pm25_unit(self, client: httpx.Client) -> str:
+        """Verify the configured sensor and obtain its unit from sensor metadata.
+
+        OpenAQ's location ``latest`` response intentionally omits the parameter
+        object, so the unit must come from the sensor resource instead.
+        """
+        response = client.get(
+            f"{self.base_url}/sensors/{self._settings.openaq_sensor_id}",
+            headers={"X-API-Key": self._settings.openaq_api_key},
+        )
+        if response.status_code != 200:
+            raise ProviderError("OpenAQ sensor metadata is unavailable.")
+
+        results = response.json().get("results", [])
+        sensor = results[0] if results else None
+        parameter = sensor.get("parameter", {}) if isinstance(sensor, dict) else {}
+        if parameter.get("name") != "pm25":
+            raise ProviderError("Configured OpenAQ sensor is not PM2.5.")
+        return _canonical_pm25_unit(str(parameter.get("units", "")))
 
     def hourly_pm25_history(self, hours: int) -> list[Pm25Reading]:
         """Return recent OpenAQ hourly PM2.5 values for model input history."""

@@ -174,24 +174,38 @@ def _build_feature_frame(
     for hour in hours:
         pm25_values = pm25_by_hour.get(hour)
         weather = weather_by_hour.get(hour)
-        if not pm25_values or weather is None:
+        if not pm25_values:
             raise ForecastGenerationError("Required forecast input history is incomplete.")
-        weather_values = (
-            weather.temperature_c,
-            weather.humidity_percent,
-            weather.dew_point_c,
-            weather.surface_pressure_hpa,
-            weather.precipitation_mm,
-            weather.shortwave_radiation_w_m2,
-            weather.wind_speed_kmh,
-            weather.wind_direction_degrees,
-        )
-        if any(value is None for value in weather_values):
-            raise ForecastGenerationError("Required forecast weather history is incomplete.")
-        direction = np.deg2rad(float(weather.wind_direction_degrees))
-        values.append(
-            {
-                "pm25": float(np.mean(pm25_values)),
+        # The tree uses the issue-hour weather features and the GRU uses only
+        # the final 24 hourly rows. Older weather values are never consumed by
+        # either packaged model, so they may be absent from a fresh deployment.
+        if weather is None:
+            weather_features = {
+                "temperature_2m": float("nan"),
+                "relative_humidity_2m": float("nan"),
+                "dew_point_2m": float("nan"),
+                "surface_pressure": float("nan"),
+                "precipitation": float("nan"),
+                "shortwave_radiation": float("nan"),
+                "wind_speed_10m": float("nan"),
+                "wind_direction_sin": float("nan"),
+                "wind_direction_cos": float("nan"),
+            }
+        else:
+            weather_values = (
+                weather.temperature_c,
+                weather.humidity_percent,
+                weather.dew_point_c,
+                weather.surface_pressure_hpa,
+                weather.precipitation_mm,
+                weather.shortwave_radiation_w_m2,
+                weather.wind_speed_kmh,
+                weather.wind_direction_degrees,
+            )
+            if any(value is None for value in weather_values):
+                raise ForecastGenerationError("Required forecast weather history is incomplete.")
+            direction = np.deg2rad(float(weather.wind_direction_degrees))
+            weather_features = {
                 "temperature_2m": float(weather.temperature_c),
                 "relative_humidity_2m": float(weather.humidity_percent),
                 "dew_point_2m": float(weather.dew_point_c),
@@ -201,6 +215,11 @@ def _build_feature_frame(
                 "wind_speed_10m": float(weather.wind_speed_kmh),
                 "wind_direction_sin": float(np.sin(direction)),
                 "wind_direction_cos": float(np.cos(direction)),
+            }
+        values.append(
+            {
+                "pm25": float(np.mean(pm25_values)),
+                **weather_features,
                 "hour_sin": float(np.sin(2 * np.pi * hour.hour / 24)),
                 "hour_cos": float(np.cos(2 * np.pi * hour.hour / 24)),
                 "doy_sin": float(np.sin(2 * np.pi * hour.timetuple().tm_yday / 365.25)),

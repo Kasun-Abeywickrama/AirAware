@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,8 +37,9 @@ class ForecastInputReadiness:
     issue_at: datetime | None
 
 
-def _hour_start(value: datetime) -> datetime:
-    return value.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+def _hour_start(value: datetime, station_timezone: ZoneInfo) -> datetime:
+    """Map a provider timestamp to the station's local model hour."""
+    return value.astimezone(station_timezone).replace(minute=0, second=0, microsecond=0)
 
 
 def evaluate_forecast_input_records(
@@ -48,10 +50,11 @@ def evaluate_forecast_input_records(
     now: datetime | None = None,
 ) -> ForecastInputReadiness:
     """Evaluate records without loading any model artifact or exposing raw diagnostics."""
+    station_timezone = ZoneInfo(settings.station_timezone)
     pm25_by_hour: dict[datetime, Pm25Observation] = {}
     latest: Pm25Observation | None = None
     for record in pm25_records:
-        hour = _hour_start(record.observed_at)
+        hour = _hour_start(record.observed_at, station_timezone)
         current = pm25_by_hour.get(hour)
         if current is None or record.observed_at > current.observed_at:
             pm25_by_hour[hour] = record
@@ -67,14 +70,16 @@ def evaluate_forecast_input_records(
     ):
         return ForecastInputReadiness(False, "Recent PM2.5 data is stale.", None)
 
-    issue_at = _hour_start(latest.observed_at)
+    issue_at = _hour_start(latest.observed_at, station_timezone)
     required_pm25_hours = {
         issue_at - timedelta(hours=offset) for offset in range(PM25_LAG_HOURS + 1)
     }
     if not required_pm25_hours.issubset(pm25_by_hour):
         return ForecastInputReadiness(False, "Recent 168-hour PM2.5 history is incomplete.", issue_at)
 
-    weather_by_hour = {_hour_start(record.valid_at): record for record in weather_records}
+    weather_by_hour = {
+        _hour_start(record.valid_at, station_timezone): record for record in weather_records
+    }
     required_weather_hours = {
         issue_at - timedelta(hours=offset) for offset in range(WEATHER_SEQUENCE_HOURS)
     }
