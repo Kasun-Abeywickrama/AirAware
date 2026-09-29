@@ -1,6 +1,17 @@
 # AirAware
 
-AirAware is a New Delhi PM2.5 decision-support web application. This repository currently contains the backend foundation only.
+AirAware is a New Delhi PM2.5 decision-support web application with a FastAPI backend and React frontend.
+
+## Frontend dashboard
+
+The React dashboard is in `frontend/`. Start the backend first, then run these commands from that folder:
+
+```powershell
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. Vite forwards `/api` calls to the local backend at `http://localhost:8000`.
 
 ## Start with Docker
 
@@ -12,6 +23,7 @@ AirAware is a New Delhi PM2.5 decision-support web application. This repository 
    ```
 
 3. Open:
+   - AirAware: `http://localhost:5173`
    - Health check: `http://localhost:8000/health`
    - API documentation: `http://localhost:8000/docs`
 
@@ -102,3 +114,18 @@ From the repository root:
 ```powershell
 python -m pytest backend/tests
 ```
+
+Run frontend checks from `frontend/`:
+
+```powershell
+npm run test
+npm run build
+```
+
+## Viva walkthrough
+
+1. **Purpose:** AirAware presents live New Delhi PM2.5 measurements and saved short-term forecasts as decision-support information.
+2. **Live-data flow:** The worker collects PM2.5 and weather data, validates it, stores approved records, and creates forecasts with the existing trained models.
+3. **User features:** The dashboard shows current conditions and forecasts; Forecast explains history and uncertainty; Activity Planner compares future time windows; Alerts stores an anonymous browser preference.
+4. **Reliability:** Every collection attempt is audited, the status endpoint reports availability, and unavailable data is shown honestly rather than estimated.
+5. **Scope:** AirAware provides comparative timing information only. It does not provide medical advice. Browser push notification delivery is a future enhancement.
