@@ -12,3 +12,6 @@ numpy==2.4.4
 scikit-learn==1.8.0
 torch>=2.11,<3.0
 xgboost==3.4.0
+# TreeSHAP is used only while generating an explanation for a saved forecast.
+# It supports both the XGBoost and Extra Trees operational artifacts.
+shap>=0.47,<1.0

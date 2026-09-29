@@ -8,6 +8,7 @@ from app.models.base import Base
 from app.models.alert_preference import AlertPreference
 from app.models.ingestion_run import IngestionRun
 from app.models.forecast import Forecast
+from app.models.forecast_explanation import ForecastExplanation
 from app.models.forecast_run import ForecastRun
 from app.models.monitoring_location import MonitoringLocation
 from app.models.pm25_observation import Pm25Observation

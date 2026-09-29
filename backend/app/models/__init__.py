@@ -2,6 +2,7 @@
 
 from .alert_preference import AlertPreference
 from .forecast import Forecast
+from .forecast_explanation import ForecastExplanation
 from .forecast_run import ForecastRun
 from .ingestion_run import IngestionRun
 from .monitoring_location import MonitoringLocation
@@ -13,6 +14,7 @@ __all__ = [
     "IngestionRun",
     "AlertPreference",
     "Forecast",
+    "ForecastExplanation",
     "ForecastRun",
     "MonitoringLocation",
     "Pm25Observation",

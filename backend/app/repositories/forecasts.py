@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models.forecast import Forecast
+from ..models.forecast_explanation import ForecastExplanation
 from ..models.forecast_run import ForecastRun
 
 
@@ -46,6 +47,34 @@ class ForecastRepository:
             .order_by(Forecast.horizon_hours)
         )
         return list(self._session.scalars(statement).all())
+
+    def create_explanation(
+        self,
+        *,
+        forecast_id: UUID,
+        method: str,
+        baseline_value_ug_m3: Decimal,
+        completeness_error_ug_m3: Decimal,
+        factors: list[dict],
+    ) -> ForecastExplanation:
+        """Save the validated factor-level explanation for a forecast."""
+        explanation = ForecastExplanation(
+            forecast_id=forecast_id,
+            method=method,
+            baseline_value_ug_m3=baseline_value_ug_m3,
+            completeness_error_ug_m3=completeness_error_ug_m3,
+            factors=factors,
+        )
+        self._session.add(explanation)
+        self._session.flush()
+        return explanation
+
+    def explanations_for_forecasts(self, forecast_ids: list[UUID]) -> dict[UUID, ForecastExplanation]:
+        """Load explanations in one query, keyed by their forecast."""
+        if not forecast_ids:
+            return {}
+        statement = select(ForecastExplanation).where(ForecastExplanation.forecast_id.in_(forecast_ids))
+        return {item.forecast_id: item for item in self._session.scalars(statement).all()}
 
     def list_since(self, since: datetime) -> list[tuple[Forecast, ForecastRun]]:
         """Return forecast outputs with their issue times for a recent history view."""

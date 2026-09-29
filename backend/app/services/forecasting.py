@@ -48,6 +48,38 @@ class GeneratedForecast:
     predicted_value_ug_m3: Decimal
     lower_bound_ug_m3: Decimal
     upper_bound_ug_m3: Decimal
+    explanation: "GeneratedExplanation"
+
+
+@dataclass(frozen=True)
+class GeneratedExplanation:
+    """A validated, grouped local explanation in PM2.5 units."""
+
+    method: str
+    baseline_value_ug_m3: Decimal
+    completeness_error_ug_m3: Decimal
+    factors: list[dict[str, Any]]
+
+
+FACTOR_DEFINITIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("current_pm25", "Current air quality", ("pm25_lag_0",)),
+    ("recent_pm25", "Recent PM2.5 trend", ("pm25_lag_1", "pm25_lag_2", "pm25_lag_3", "pm25_lag_6")),
+    ("older_pm25", "Earlier PM2.5 pattern", ("pm25_lag_12", "pm25_lag_24", "pm25_lag_48", "pm25_lag_72", "pm25_lag_168")),
+    ("temperature_moisture", "Temperature and moisture", ("temperature_2m", "relative_humidity_2m", "dew_point_2m")),
+    ("rainfall", "Rainfall", ("precipitation",)),
+    ("solar_radiation", "Sunlight", ("shortwave_radiation",)),
+    ("air_pressure", "Air pressure", ("surface_pressure",)),
+    ("wind_speed", "Wind speed", ("wind_speed_10m",)),
+    ("wind_direction", "Wind direction", ("wind_direction_sin", "wind_direction_cos")),
+    ("time_of_day", "Time of day", ("hour_sin", "hour_cos")),
+    # This operational model does not use a day-of-week input. It stays visible
+    # so the interface honestly distinguishes an unused factor from a low effect.
+    ("day_of_week", "Day-of-week pattern", ()),
+    ("seasonal_pattern", "Seasonal pattern", ("doy_sin", "doy_cos")),
+)
+FACTOR_BY_FEATURE = {
+    feature: key for key, _label, features in FACTOR_DEFINITIONS for feature in features
+}
 
 
 class PackagedModelService:
@@ -98,6 +130,14 @@ class PackagedModelService:
 
             prediction = max(0.0, prediction)
             offset = float(specification["conformal_offset"])
+            explanation = self._build_explanation(
+                tree=tree,
+                row=row,
+                tree_feature_names=tree_features,
+                specification=specification,
+                sequence=sequence,
+                prediction=prediction,
+            )
             forecasts.append(
                 GeneratedForecast(
                     horizon_hours=horizon,
@@ -105,6 +145,7 @@ class PackagedModelService:
                     predicted_value_ug_m3=_decimal(prediction),
                     lower_bound_ug_m3=_decimal(max(0.0, prediction - offset)),
                     upper_bound_ug_m3=_decimal(prediction + offset),
+                    explanation=explanation,
                 )
             )
 
@@ -140,6 +181,12 @@ class PackagedModelService:
                 raise ForecastGenerationError("Forecast model file verification failed.")
 
     def _predict_gru(self, filename: str, sequence: np.ndarray) -> float:
+        model, payload, scaled = self._load_gru(filename, sequence)
+        with torch.no_grad():
+            value = model(torch.tensor(scaled[None, :, :], dtype=torch.float32)).item()
+        return float(value * payload["target_scale"] + payload["target_mean"])
+
+    def _load_gru(self, filename: str, sequence: np.ndarray) -> tuple[GRURegressor, dict[str, Any], np.ndarray]:
         try:
             payload = torch.load(self._artifact_path(filename), map_location="cpu", weights_only=False)
             model = GRURegressor(len(payload["features"]))
@@ -148,9 +195,71 @@ class PackagedModelService:
             raise ForecastGenerationError("Required forecast model files are unavailable.") from error
         model.eval()
         scaled = (sequence - np.asarray(payload["scaler_mean"])) / np.asarray(payload["scaler_scale"])
+        return model, payload, scaled
+
+    def _build_explanation(
+        self,
+        *,
+        tree: Any,
+        row: np.ndarray,
+        tree_feature_names: list[str],
+        specification: dict[str, Any],
+        sequence: np.ndarray,
+        prediction: float,
+    ) -> GeneratedExplanation:
+        """Explain the exact saved model output, then verify its reconstruction."""
+        tree_base, tree_values = _tree_shap_values(tree, row)
+        grouped_tree = _group_contributions(tree_feature_names, tree_values)
+        if specification["model_family"] == "XGBoost-GRU":
+            gru_base, gru_values = self._gru_integrated_gradients(
+                specification["gru_artifact"], sequence
+            )
+            grouped_gru = _group_sequence_contributions(
+                list(self._manifest["base_features"]), gru_values
+            )
+            weight = float(specification["xgboost_weight"])
+            baseline = weight * tree_base + (1 - weight) * gru_base
+            grouped = {
+                key: weight * grouped_tree[key] + (1 - weight) * grouped_gru[key]
+                for key, _label, _features in FACTOR_DEFINITIONS
+            }
+            method = "TreeSHAP + Integrated Gradients"
+        else:
+            baseline = tree_base
+            grouped = grouped_tree
+            method = "TreeSHAP"
+
+        reconstructed = baseline + sum(grouped.values())
+        error = abs(prediction - reconstructed)
+        # The local explanation must reconstruct the operational prediction.
+        # A larger discrepancy usually means the artifact or explainer is incompatible.
+        if error > 0.25:
+            raise ForecastGenerationError("Forecast explanation validation failed.")
+        return GeneratedExplanation(
+            method=method,
+            baseline_value_ug_m3=_decimal(baseline),
+            completeness_error_ug_m3=_decimal(error),
+            factors=_rank_factors(grouped),
+        )
+
+    def _gru_integrated_gradients(
+        self, filename: str, sequence: np.ndarray, steps: int = 256
+    ) -> tuple[float, np.ndarray]:
+        """Return a GRU baseline and Integrated Gradients in PM2.5 units."""
+        model, payload, scaled = self._load_gru(filename, sequence)
+        inputs = torch.tensor(scaled, dtype=torch.float32)
+        baseline = torch.zeros_like(inputs)
+        total_gradients = torch.zeros_like(inputs)
+        for alpha in torch.linspace(1 / steps, 1, steps):
+            sample = (baseline + alpha * (inputs - baseline)).unsqueeze(0).detach().requires_grad_(True)
+            model(sample).sum().backward()
+            total_gradients += sample.grad.squeeze(0)
+            model.zero_grad(set_to_none=True)
+        target_scale = float(payload["target_scale"])
+        contributions = ((inputs - baseline) * (total_gradients / steps)).detach().numpy() * target_scale
         with torch.no_grad():
-            value = model(torch.tensor(scaled[None, :, :], dtype=torch.float32)).item()
-        return float(value * payload["target_scale"] + payload["target_mean"])
+            baseline_value = model(baseline.unsqueeze(0)).item()
+        return float(baseline_value * target_scale + payload["target_mean"]), contributions
 
 
 def _build_feature_frame(
@@ -236,6 +345,81 @@ def _tree_feature_names(manifest: dict[str, Any]) -> list[str]:
     return [f"pm25_lag_{lag}" for lag in manifest["pm25_lags"]] + [
         name for name in manifest["base_features"] if name != "pm25"
     ]
+
+
+def _tree_shap_values(tree: Any, row: np.ndarray) -> tuple[float, np.ndarray]:
+    """Calculate exact TreeSHAP values for an XGBoost or sklearn tree artifact."""
+    try:
+        import shap
+
+        explainer = shap.TreeExplainer(tree)
+        values = np.asarray(explainer.shap_values(row), dtype=float)
+        expected = np.asarray(explainer.expected_value, dtype=float).reshape(-1)
+    except (ImportError, AttributeError, RuntimeError, TypeError, ValueError) as error:
+        raise ForecastGenerationError("Forecast explanation is unavailable for this model.") from error
+    if values.ndim == 3:
+        values = values[:, :, 0]
+    if values.ndim != 2 or values.shape[0] != 1:
+        raise ForecastGenerationError("Forecast explanation is unavailable for this model.")
+    return float(expected[0]), values[0]
+
+
+def _empty_groups() -> dict[str, float]:
+    return {key: 0.0 for key, _label, _features in FACTOR_DEFINITIONS}
+
+
+def _group_contributions(feature_names: list[str], values: np.ndarray) -> dict[str, float]:
+    """Aggregate model-level features into the public 12-factor vocabulary."""
+    grouped = _empty_groups()
+    for name, value in zip(feature_names, values, strict=True):
+        factor = FACTOR_BY_FEATURE.get(name)
+        if factor is not None:
+            grouped[factor] += float(value)
+    return grouped
+
+
+def _group_sequence_contributions(feature_names: list[str], values: np.ndarray) -> dict[str, float]:
+    """Aggregate a 24-hour GRU attribution tensor into the same factors."""
+    grouped = _empty_groups()
+    for index, name in enumerate(feature_names):
+        if name == "pm25":
+            # The sequence runs from oldest to newest. Preserve the meaning of
+            # the public PM2.5 groups instead of calling every past value
+            # "current" merely because the GRU stores it in one input column.
+            for step, value in enumerate(values[:, index]):
+                lag_hours = len(values) - 1 - step
+                factor = "current_pm25" if lag_hours == 0 else "recent_pm25" if lag_hours <= 6 else "older_pm25"
+                grouped[factor] += float(value)
+            continue
+        factor = FACTOR_BY_FEATURE.get(name)
+        if factor is not None:
+            grouped[factor] += float(values[:, index].sum())
+    return grouped
+
+
+def _rank_factors(grouped: dict[str, float]) -> list[dict[str, Any]]:
+    """Produce UI-safe values: top three first, all twelve always present."""
+    supported = [key for key, _label, features in FACTOR_DEFINITIONS if features]
+    ranking = sorted(supported, key=lambda key: abs(grouped[key]), reverse=True)
+    rank_by_key = {key: index + 1 for index, key in enumerate(ranking)}
+    total = sum(abs(grouped[key]) for key in supported)
+    items: list[dict[str, Any]] = []
+    for key, label, features in FACTOR_DEFINITIONS:
+        contribution = grouped[key]
+        used = bool(features)
+        items.append(
+            {
+                "key": key,
+                "label": label,
+                "contribution_ug_m3": float(_decimal(contribution)),
+                "direction": "increased" if contribution > 0.005 else "decreased" if contribution < -0.005 else "neutral",
+                "absolute_share_percent": float(_decimal(100 * abs(contribution) / total)) if total else 0.0,
+                "rank": rank_by_key.get(key),
+                "is_top_3": rank_by_key.get(key, 99) <= 3,
+                "used_by_model": used,
+            }
+        )
+    return sorted(items, key=lambda item: (not item["is_top_3"], item["rank"] or 99, item["label"]))
 
 
 def _decimal(value: float) -> Decimal:

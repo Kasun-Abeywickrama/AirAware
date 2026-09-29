@@ -107,7 +107,9 @@ def test_latest_forecasts_requires_complete_successful_run(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         public_data, "ForecastRepository",
-        lambda session: SimpleNamespace(list_for_run=lambda run_id: []),
+        lambda session: SimpleNamespace(
+            list_for_run=lambda run_id: [], explanations_for_forecasts=lambda forecast_ids: {}
+        ),
     )
 
     result = public_data.get_latest_forecasts()
@@ -128,6 +130,7 @@ def test_latest_forecasts_returns_all_three_saved_horizons(monkeypatch) -> None:
     )
     saved = [
         SimpleNamespace(
+            id=UUID(int=horizon),
             horizon_hours=horizon, target_at=NOW + timedelta(hours=horizon),
             predicted_value_ug_m3=Decimal("60"), lower_bound_ug_m3=Decimal("40"),
             upper_bound_ug_m3=Decimal("80"),
@@ -136,7 +139,9 @@ def test_latest_forecasts_returns_all_three_saved_horizons(monkeypatch) -> None:
     ]
     monkeypatch.setattr(
         public_data, "ForecastRepository",
-        lambda session: SimpleNamespace(list_for_run=lambda run_id: saved),
+        lambda session: SimpleNamespace(
+            list_for_run=lambda run_id: saved, explanations_for_forecasts=lambda forecast_ids: {}
+        ),
     )
 
     result = public_data.get_latest_forecasts()

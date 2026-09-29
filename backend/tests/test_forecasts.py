@@ -3,6 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
+import numpy as np
 import pytest
 from sqlalchemy import CheckConstraint, ForeignKeyConstraint, UniqueConstraint
 
@@ -87,6 +88,14 @@ class FakeTree:
         return [100.0]
 
 
+def fake_explanation(*args, **kwargs):
+    return forecasting.GeneratedExplanation(
+        method="test", baseline_value_ug_m3=Decimal("50"),
+        completeness_error_ug_m3=Decimal("0"),
+        factors=[],
+    )
+
+
 def test_forecast_schema_has_required_constraints() -> None:
     forecast_names = {constraint.name for constraint in Forecast.__table__.constraints}
     run_names = {constraint.name for constraint in ForecastRun.__table__.constraints}
@@ -123,6 +132,7 @@ def test_packaged_model_service_generates_all_horizons(monkeypatch) -> None:
     monkeypatch.setattr(service, "_verify_artifacts", lambda: None)
     monkeypatch.setattr(forecasting.joblib, "load", lambda path: FakeTree())
     monkeypatch.setattr(service, "_predict_gru", lambda filename, sequence: 80.0)
+    monkeypatch.setattr(service, "_build_explanation", fake_explanation)
 
     forecasts, input_version = service.generate(
         pm25_records=pm25, weather_records=weather, issue_at=ISSUE_AT
@@ -134,6 +144,20 @@ def test_packaged_model_service_generates_all_horizons(monkeypatch) -> None:
     assert forecasts[2].predicted_value_ug_m3 == Decimal("100.00")
     assert all(item.upper_bound_ug_m3 >= item.lower_bound_ug_m3 for item in forecasts)
     assert len(input_version) == 64
+    assert forecasts[0].explanation.method == "test"
+
+
+def test_gru_pm25_history_is_grouped_by_its_actual_hour_lag() -> None:
+    values = np.zeros((24, 14), dtype=float)
+    values[:, 0] = 1
+
+    grouped = forecasting._group_sequence_contributions(
+        ["pm25", *[f"feature_{index}" for index in range(13)]], values
+    )
+
+    assert grouped["current_pm25"] == 1
+    assert grouped["recent_pm25"] == 6
+    assert grouped["older_pm25"] == 17
 
 
 @pytest.mark.skipif(

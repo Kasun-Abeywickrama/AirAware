@@ -88,6 +88,9 @@ def get_latest_forecasts() -> PublicDataResult:
             forecasts = ForecastRepository(session).list_for_run(run.id)
             if {item.horizon_hours for item in forecasts} != {1, 6, 24}:
                 return unavailable("Forecasts are not available yet.", "FORECASTS_NOT_AVAILABLE")
+            explanation_by_forecast = ForecastRepository(session).explanations_for_forecasts(
+                [item.id for item in forecasts]
+            )
             return PublicDataResult(
                 http_status_code=200,
                 payload={
@@ -101,6 +104,7 @@ def get_latest_forecasts() -> PublicDataResult:
                             "predicted_value_ug_m3": item.predicted_value_ug_m3,
                             "lower_bound_ug_m3": item.lower_bound_ug_m3,
                             "upper_bound_ug_m3": item.upper_bound_ug_m3,
+                            "explanation": _public_explanation(explanation_by_forecast.get(item.id)),
                         }
                         for item in forecasts
                     ],
@@ -110,3 +114,13 @@ def get_latest_forecasts() -> PublicDataResult:
             session.close()
     except (RuntimeError, SQLAlchemyError):
         return unavailable("Forecasts are temporarily unavailable.", "DATABASE_UNAVAILABLE")
+
+
+def _public_explanation(explanation: Any | None) -> dict[str, Any] | None:
+    """Expose only plain-language, factor-level explanation fields."""
+    if explanation is None:
+        return None
+    return {
+        "factors": explanation.factors,
+        "notice": "These show patterns learned by the model, not proven causes of pollution.",
+    }

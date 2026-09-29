@@ -62,7 +62,21 @@ def generate_forecasts(settings: Settings | None = None) -> bool:
         )
         repository = ForecastRepository(session)
         for forecast in forecasts:
-            repository.create(forecast_run_id=run.id, **forecast.__dict__)
+            saved_forecast = repository.create(
+                forecast_run_id=run.id,
+                horizon_hours=forecast.horizon_hours,
+                target_at=forecast.target_at,
+                predicted_value_ug_m3=forecast.predicted_value_ug_m3,
+                lower_bound_ug_m3=forecast.lower_bound_ug_m3,
+                upper_bound_ug_m3=forecast.upper_bound_ug_m3,
+            )
+            repository.create_explanation(
+                forecast_id=saved_forecast.id,
+                method=forecast.explanation.method,
+                baseline_value_ug_m3=forecast.explanation.baseline_value_ug_m3,
+                completeness_error_ug_m3=forecast.explanation.completeness_error_ug_m3,
+                factors=forecast.explanation.factors,
+            )
         runs.mark_succeeded(run, input_version=input_version)
         events.record(component="forecast", level="info", message="Operational forecasts generated.")
         session.commit()
