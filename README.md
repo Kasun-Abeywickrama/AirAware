@@ -2,6 +2,10 @@
 
 AirAware is a New Delhi PM2.5 decision-support web application with a FastAPI backend and React frontend.
 
+## Quick Execution Guides
+- 📖 **Local Execution (Hybrid Dev Mode):** [RUN_LOCALLY.md](RUN_LOCALLY.md)
+- 🐳 **Full Containerized Execution (Docker Compose):** [RUN_DOCKER.md](RUN_DOCKER.md)
+
 ## Frontend dashboard
 
 The React dashboard is in `frontend/`. Start the backend first, then run these commands from that folder:
