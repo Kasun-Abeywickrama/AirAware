@@ -11,14 +11,8 @@ export function AppHeader({ page, serviceState }: { page: Page; serviceState: Av
         Skip to main content
       </a>
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        {/* Brand lockup: icon mark + wordmark */}
-        <a href="#" className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 rounded-lg" aria-label="AirAware – go to dashboard">
-          <img
-            src="/logo-icon.png"
-            alt=""
-            aria-hidden="true"
-            className="h-10 w-auto"
-          />
+        {/* Brand wordmark */}
+        <a href="#" className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 rounded-lg" aria-label="AirAware – go to dashboard">
           <img
             src="/logo-wordmark.png"
             alt="AirAware"
