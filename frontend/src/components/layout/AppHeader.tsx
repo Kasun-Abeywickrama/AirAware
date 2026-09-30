@@ -1,4 +1,4 @@
-import { MapPin, Wind } from "lucide-react";
+import { MapPin } from "lucide-react";
 import type { Availability } from "../../api/types";
 import { StatusBadge } from "../common/StatusBadge";
 
@@ -10,16 +10,22 @@ export function AppHeader({ page, serviceState }: { page: Page; serviceState: Av
       <a className="skip-link rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white shadow-lg" href="#main-content">
         Skip to main content
       </a>
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-teal-700 p-2.5 text-white">
-            <Wind className="size-6" aria-hidden="true" />
-          </div>
-          <div>
-            <p className="text-xl font-bold tracking-tight">AirAware</p>
-            <p className="text-sm text-slate-600">PM2.5 decision-support dashboard</p>
-          </div>
-        </div>
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        {/* Brand lockup: icon mark + wordmark */}
+        <a href="#" className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 rounded-lg" aria-label="AirAware – go to dashboard">
+          <img
+            src="/logo-icon.png"
+            alt=""
+            aria-hidden="true"
+            className="h-10 w-auto"
+          />
+          <img
+            src="/logo-wordmark.png"
+            alt="AirAware"
+            className="h-7 w-auto"
+          />
+        </a>
+
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:justify-end">
           <nav className="flex items-center gap-5" aria-label="Main navigation">
             <a
@@ -61,3 +67,4 @@ export function AppHeader({ page, serviceState }: { page: Page; serviceState: Av
     </header>
   );
 }
+
