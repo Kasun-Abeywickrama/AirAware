@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { CalendarDays, Clock3, Grid2X2, Sparkles, Table2 } from "lucide-react";
+import { CalendarDays, ChevronDown, Clock3, Grid2X2, Sparkles, Table2 } from "lucide-react";
 import { api } from "../../api/client";
 import type { ActivityPlan, ActivityPlanWindow } from "../../api/types";
 import { formatPm25 } from "../../utils/format";
@@ -36,7 +36,7 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-type ViewMode = "cards" | "table" | "clock";
+type ViewMode = "clock" | "cards" | "table";
 
 function WindowCards({ plan }: { plan: ActivityPlan }) {
   return (
@@ -183,11 +183,11 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
 }
 
 function PlanResults({ plan }: { plan: ActivityPlan }) {
-  const [view, setView] = useState<ViewMode>("cards");
+  const [view, setView] = useState<ViewMode>("clock");
   const modes: Array<{ id: ViewMode; label: string; Icon: typeof Grid2X2 }> = [
+    { id: "clock", label: "Clock", Icon: Clock3 },
     { id: "cards", label: "Cards", Icon: Grid2X2 },
     { id: "table", label: "Table", Icon: Table2 },
-    { id: "clock", label: "Clock", Icon: Clock3 },
   ];
   return (
     <div className="mt-6" aria-live="polite">
@@ -213,89 +213,102 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
           ))}
         </div>
       </div>
-      <div className="mt-3" role="tabpanel">
+      <div className="mt-4" role="tabpanel">
+        {view === "clock" && <ClockCircles plan={plan} />}
         {view === "cards" && <WindowCards plan={plan} />}
         {view === "table" && <WindowTable plan={plan} />}
-        {view === "clock" && <ClockCircles plan={plan} />}
       </div>
       <p className="mt-4 text-xs leading-5 text-slate-500">{plan.disclaimer}</p>
     </div>
   );
 }
 
-export function ActivityPlanner() {
+export function ActivityPlannerPage() {
   const [date, setDate] = useState(newDelhiDate);
   const [duration, setDuration] = useState(60);
   const planner = useMutation({ mutationFn: () => api.activityPlan(date, duration) });
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="planner-heading">
-      <div className="flex items-start gap-3">
-        <div className="rounded-xl bg-teal-50 p-2 text-teal-700">
-          <Sparkles className="size-5" aria-hidden="true" />
+    <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+      <section className="max-w-3xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Outdoor planning</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Activity Planner</h1>
+        <p className="mt-3 text-base leading-7 text-slate-600">
+          Find the cleanest air windows for outdoor exercise, errands, and commuting in New Delhi based on hourly PM2.5 forecasts.
+        </p>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="planner-heading">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-teal-50 p-2 text-teal-700">
+            <Sparkles className="size-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
+              Plan your outdoor activity
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Select your intended date and activity duration to calculate optimal windows.</p>
+          </div>
         </div>
-        <div>
-          <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
-            Activity planner
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">Compare available forecast windows for an outdoor activity in New Delhi.</p>
-        </div>
-      </div>
-      <form
-        className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
-        onSubmit={(event) => {
-          event.preventDefault();
-          planner.mutate();
-        }}
-      >
-        <label className="grid gap-2 text-sm font-medium text-slate-800">
-          <span className="flex items-center gap-1.5">
-            <CalendarDays className="size-4 text-teal-700" aria-hidden="true" />
-            Date
-          </span>
-          <input
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-teal-700"
-            type="date"
-            value={date}
-            min={newDelhiDate()}
-            onChange={(event) => setDate(event.target.value)}
-            required
-          />
-        </label>
-        <label className="grid gap-2 text-sm font-medium text-slate-800">
-          <span className="flex items-center gap-1.5">
-            <Clock3 className="size-4 text-teal-700" aria-hidden="true" />
-            Duration
-          </span>
-          <select
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-teal-700"
-            value={duration}
-            onChange={(event) => setDuration(Number(event.target.value))}
-          >
-            {DURATIONS.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {minutes / 60} {minutes === 60 ? "hour" : "hours"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-          type="submit"
-          disabled={planner.isPending}
+        <form
+          className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            planner.mutate();
+          }}
         >
-          {planner.isPending ? "Finding times…" : "Find best times"}
-        </button>
-      </form>
-      {planner.isError && (
-        <div className="mt-5">
-          <UnavailablePanel
-            title="No complete plan is available"
-            message={planner.error instanceof Error ? planner.error.message : "Try a different future date or duration."}
-          />
-        </div>
-      )}
-      {planner.data && <PlanResults plan={planner.data} />}
-    </section>
+          <label className="grid gap-2 text-sm font-medium text-slate-800">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="size-4 text-teal-700" aria-hidden="true" />
+              Date
+            </span>
+            <input
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-teal-700"
+              type="date"
+              value={date}
+              min={newDelhiDate()}
+              onChange={(event) => setDate(event.target.value)}
+              required
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium text-slate-800">
+            <span className="flex items-center gap-1.5">
+              <Clock3 className="size-4 text-teal-700" aria-hidden="true" />
+              Duration
+            </span>
+            <div className="relative">
+              <select
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
+                value={duration}
+                onChange={(event) => setDuration(Number(event.target.value))}
+              >
+                {DURATIONS.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {minutes / 60} {minutes === 60 ? "hour" : "hours"}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+            </div>
+          </label>
+          <button
+            className="rounded-lg bg-teal-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            type="submit"
+            disabled={planner.isPending}
+          >
+            {planner.isPending ? "Finding times…" : "Find best times"}
+          </button>
+        </form>
+        {planner.isError && (
+          <div className="mt-5">
+            <UnavailablePanel
+              title="No complete plan is available"
+              message={planner.error instanceof Error ? planner.error.message : "Try a different future date or duration."}
+            />
+          </div>
+        )}
+        {planner.data && <PlanResults plan={planner.data} />}
+      </section>
+    </main>
   );
 }

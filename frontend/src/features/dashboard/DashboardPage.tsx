@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, CloudSun } from "lucide-react";
 import { api } from "../../api/client";
-import { ActivityPlanner } from "./ActivityPlanner";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { WhoAqiBadge } from "../../components/common/WhoAqiBadge";
 import { ForecastCard } from "../forecast/ForecastCard";
@@ -197,9 +196,7 @@ export function DashboardPage() {
             )
           )}
         </section>
-        <section className="mt-10">
-          <ActivityPlanner />
-        </section>
+
         <section className="mt-10">
           {history.isLoading ? (
             <LoadingBlock label="Loading PM2.5 trend" />

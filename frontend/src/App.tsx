@@ -10,12 +10,16 @@ const ONE_MINUTE = 60_000;
 const ForecastHistoryPage = lazy(() =>
   import("./features/forecast/ForecastHistoryPage").then((module) => ({ default: module.ForecastHistoryPage })),
 );
+const ActivityPlannerPage = lazy(() =>
+  import("./features/planner/ActivityPlannerPage").then((module) => ({ default: module.ActivityPlannerPage })),
+);
 const AlertPreferencesPage = lazy(() =>
   import("./features/alerts/AlertPreferencesPage").then((module) => ({ default: module.AlertPreferencesPage })),
 );
 
 function pageFromHash(): Page {
   if (window.location.hash === "#forecast") return "forecast";
+  if (window.location.hash === "#planner") return "planner";
   if (window.location.hash === "#alerts") return "alerts";
   return "dashboard";
 }
@@ -47,6 +51,19 @@ export default function App() {
             }
           >
             <ForecastHistoryPage />
+          </Suspense>
+        </>
+      ) : page === "planner" ? (
+        <>
+          <AppHeader page="planner" serviceState={serviceState} />
+          <Suspense
+            fallback={
+              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+                <LoadingBlock label="Loading activity planner" />
+              </main>
+            }
+          >
+            <ActivityPlannerPage />
           </Suspense>
         </>
       ) : (

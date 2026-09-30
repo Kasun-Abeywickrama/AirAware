@@ -34,10 +34,10 @@ export function AirQualityChart({ history, expanded = false }: { history: Foreca
       </div>
       <div className={`mt-6 ${expanded ? "h-96 sm:h-[28rem]" : "h-72"}`} role="img" aria-label="PM2.5 observations and forecast chart">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <ComposedChart data={data} margin={{ top: 24, right: 12, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateTime} minTickGap={48} tick={{ fill: "#475569", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#475569", fontSize: 11 }} tickFormatter={(value) => `${value} µg/m³`} axisLine={false} tickLine={false} width={76} />
+            <YAxis tick={{ fill: "#475569", fontSize: 11 }} tickFormatter={(value) => `${value} µg/m³`} axisLine={false} tickLine={false} width={80} />
             <Tooltip
               labelFormatter={(value) => formatDateTime(String(value))}
               formatter={(value: number, name) => [`${formatPm25(value)} µg/m³`, name === "observation" ? "Observed" : name === "forecast" ? "Forecast" : name]}
