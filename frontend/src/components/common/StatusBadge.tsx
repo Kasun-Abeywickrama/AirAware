@@ -1,5 +1,5 @@
 import { CheckCircle2, CircleAlert, CircleX } from "lucide-react";
-import type { Availability } from "../api/types";
+import type { Availability } from "../../api/types";
 
 const labels: Record<Availability | "checking", string> = {
   available: "Live data available",
