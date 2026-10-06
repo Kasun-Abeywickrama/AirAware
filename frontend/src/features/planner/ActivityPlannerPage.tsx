@@ -265,158 +265,165 @@ function PlannerExplanation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 transition" aria-label="Calculation methodology">
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-800 hover:text-teal-900 transition focus:outline-none"
-        aria-expanded={isOpen}
-      >
-        <span className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-teal-50 p-1.5 text-teal-700">
-            <Info className="size-4" aria-hidden="true" />
-          </div>
-          <span>Step-by-step: How are these values calculated?</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+    <section className="mt-8 border-t border-slate-200 pt-6" aria-label="Calculation methodology">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Info className="size-4 text-teal-700" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-slate-900">
+            Step-by-step: How these values are calculated
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-teal-800 shadow-2xs transition"
+          aria-expanded={isOpen}
+        >
           <span>{isOpen ? "Hide calculation" : "View calculation steps"}</span>
           <ChevronDown
             className={`size-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
-        </span>
-      </button>
+        </button>
+      </div>
 
       {isOpen && (
-        <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-700">
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {/* Step 1 */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
-                  Step 1
-                </span>
-                <span className="text-[11px] font-medium text-slate-500">Time Window</span>
-              </div>
-              <p className="mt-2 font-semibold text-slate-900">Moving Duration Windows</p>
-              <p className="mt-1 text-slate-600 leading-relaxed text-[11px]">
-                The system scans every consecutive hourly block matching your chosen duration (e.g. 5:00 pm – 7:00 pm = 2 continuous hours).
-              </p>
+        <div className="mt-6 max-w-3xl space-y-7 text-xs text-slate-700">
+          {/* Step 1 */}
+          <div className="relative pl-7 before:absolute before:left-2 before:top-2.5 before:bottom-0 before:w-px before:bg-slate-200">
+            <span className="absolute left-0 top-0.5 flex size-4 items-center justify-center rounded-full bg-teal-700 text-[10px] font-bold text-white">
+              1
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">Step 1</span>
+              <span className="text-slate-400">·</span>
+              <h4 className="text-sm font-semibold text-slate-900">Time Window Selection</h4>
             </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+              The model identifies all continuous hourly blocks matching your chosen activity duration (e.g. <strong>5:00 pm – 7:00 pm = 2 continuous hours</strong>).
+            </p>
+          </div>
 
-            {/* Step 2 */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
-                  Step 2
-                </span>
-                <span className="text-[11px] font-medium text-slate-500">Forecast PM2.5</span>
-              </div>
-              <p className="mt-2 font-semibold text-slate-900">Hourly Prediction Average</p>
-              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-2xs space-y-2">
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-800">
-                  <span>Mean =</span>
-                  <span className="inline-flex flex-col items-center">
-                    <span className="border-b border-slate-400 px-1 pb-0.5">Hour₁ + Hour₂</span>
-                    <span className="pt-0.5">2</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-600 border-t border-slate-100 pt-1.5">
-                  <span>=</span>
-                  <span className="inline-flex flex-col items-center">
-                    <span className="border-b border-slate-400 px-1 pb-0.5">29.9 + 32.2</span>
-                    <span className="pt-0.5">2</span>
-                  </span>
-                  <span>= <strong className="text-slate-950 font-bold">31.0 µg/m³</strong></span>
-                </div>
-              </div>
+          {/* Step 2 */}
+          <div className="relative pl-7 before:absolute before:left-2 before:top-2.5 before:bottom-0 before:w-px before:bg-slate-200">
+            <span className="absolute left-0 top-0.5 flex size-4 items-center justify-center rounded-full bg-teal-700 text-[10px] font-bold text-white">
+              2
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">Step 2</span>
+              <span className="text-slate-400">·</span>
+              <h4 className="text-sm font-semibold text-slate-900">Forecast PM2.5 (Hourly Average)</h4>
             </div>
-
-            {/* Step 3 */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
-                  Step 3
+            <p className="mt-1.5 text-xs text-slate-600">
+              Calculates the arithmetic average of hourly PM2.5 predictions across the window:
+            </p>
+            <div className="mt-2.5 space-y-2 font-mono text-xs text-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-900">Mean =</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">Hour₁ + Hour₂</span>
+                  <span className="pt-0.5">2</span>
                 </span>
-                <span className="text-[11px] font-medium text-slate-500">Upper Range</span>
               </div>
-              <p className="mt-2 font-semibold text-slate-900">95% Confidence Upper Bound</p>
-              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-2xs space-y-2">
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-800">
-                  <span>Upper =</span>
-                  <span className="inline-flex flex-col items-center">
-                    <span className="border-b border-slate-400 px-1 pb-0.5">Upper₁ + Upper₂</span>
-                    <span className="pt-0.5">2</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-600 border-t border-slate-100 pt-1.5">
-                  <span>=</span>
-                  <span className="inline-flex flex-col items-center">
-                    <span className="border-b border-slate-400 px-1 pb-0.5">75.5 + 77.8</span>
-                    <span className="pt-0.5">2</span>
-                  </span>
-                  <span>= <strong className="text-slate-950 font-bold">76.6 µg/m³</strong></span>
-                </div>
+              <div className="flex items-center gap-2 text-slate-600">
+                <span>=</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">29.9 + 32.2</span>
+                  <span className="pt-0.5">2</span>
+                </span>
+                <span>= <strong className="text-slate-950 font-bold">31.0 µg/m³</strong></span>
               </div>
             </div>
+          </div>
 
-            {/* Step 4 */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 md:col-span-2 lg:col-span-2">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 border border-amber-200/60">
-                  Step 4
+          {/* Step 3 */}
+          <div className="relative pl-7 before:absolute before:left-2 before:top-2.5 before:bottom-0 before:w-px before:bg-slate-200">
+            <span className="absolute left-0 top-0.5 flex size-4 items-center justify-center rounded-full bg-teal-700 text-[10px] font-bold text-white">
+              3
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">Step 3</span>
+              <span className="text-slate-400">·</span>
+              <h4 className="text-sm font-semibold text-slate-900">Upper Range (95% Confidence Bound)</h4>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-600">
+              Calculates the average of the model's 95% worst-case upper uncertainty estimates:
+            </p>
+            <div className="mt-2.5 space-y-2 font-mono text-xs text-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-900">Upper =</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">Upper₁ + Upper₂</span>
+                  <span className="pt-0.5">2</span>
                 </span>
-                <span className="text-[11px] font-medium text-slate-500">US EPA 2024 Formula</span>
               </div>
-              <p className="mt-2 font-semibold text-slate-900">Piecewise Linear AQI Conversion</p>
-              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs space-y-2.5">
-                {/* Mathematical Equation with Fraction */}
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-800 overflow-x-auto pb-0.5">
-                  <span className="font-semibold text-slate-900">AQI =</span>
-                  <span className="inline-flex flex-col items-center">
-                    <span className="border-b border-slate-400 px-1.5 pb-0.5">I<sub>high</sub> − I<sub>low</sub></span>
-                    <span className="pt-0.5">C<sub>high</sub> − C<sub>low</sub></span>
-                  </span>
-                  <span>× (C − C<sub>low</sub>) + I<sub>low</sub></span>
-                </div>
-
-                {/* Substituted Example Steps */}
-                <div className="border-t border-slate-100 pt-2 space-y-2 font-mono text-xs text-slate-600 overflow-x-auto">
-                  <div className="flex items-center gap-2">
-                    <span>=</span>
-                    <span className="inline-flex flex-col items-center">
-                      <span className="border-b border-slate-400 px-1.5 pb-0.5">100 − 51</span>
-                      <span className="pt-0.5">35.4 − 9.1</span>
-                    </span>
-                    <span>× (31.0 − 9.1) + 51</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                    <span>=</span>
-                    <span className="inline-flex flex-col items-center">
-                      <span className="border-b border-slate-400 px-1.5 pb-0.5">49</span>
-                      <span className="pt-0.5">26.3</span>
-                    </span>
-                    <span>× 21.9 + 51</span>
-                    <span>= 40.8 + 51</span>
-                    <span>= <strong className="rounded bg-amber-50 px-2 py-0.5 font-bold text-amber-900 border border-amber-200/80">AQI 92 (Moderate)</strong></span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 text-slate-600">
+                <span>=</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">75.5 + 77.8</span>
+                  <span className="pt-0.5">2</span>
+                </span>
+                <span>= <strong className="text-slate-950 font-bold">76.6 µg/m³</strong></span>
               </div>
             </div>
+          </div>
 
-            {/* Step 5 */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200/60">
-                  Step 5
-                </span>
-                <span className="text-[11px] font-medium text-slate-500">Option 1 [BEST]</span>
-              </div>
-              <p className="mt-2 font-semibold text-slate-900">Cleanest Air Ranking</p>
-              <p className="mt-1 text-slate-600 leading-relaxed text-[11px]">
-                All candidate windows across the day are ranked in ascending order by predicted PM2.5. Lowest pollution = <strong>Option 1 [BEST]</strong>.
-              </p>
+          {/* Step 4 */}
+          <div className="relative pl-7 before:absolute before:left-2 before:top-2.5 before:bottom-0 before:w-px before:bg-slate-200">
+            <span className="absolute left-0 top-0.5 flex size-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
+              4
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Step 4</span>
+              <span className="text-slate-400">·</span>
+              <h4 className="text-sm font-semibold text-slate-900">US EPA 2024 Formula (AQI Conversion)</h4>
             </div>
+            <p className="mt-1.5 text-xs text-slate-600">
+              Maps PM2.5 to the standard 0–500 index using linear interpolation within the matching breakpoint band:
+            </p>
+            <div className="mt-2.5 space-y-2 font-mono text-xs text-slate-800">
+              <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+                <span className="font-semibold text-slate-900">AQI =</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">I<sub>high</sub> − I<sub>low</sub></span>
+                  <span className="pt-0.5">C<sub>high</sub> − C<sub>low</sub></span>
+                </span>
+                <span>× (C − C<sub>low</sub>) + I<sub>low</sub></span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto text-slate-600">
+                <span>=</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">100 − 51</span>
+                  <span className="pt-0.5">35.4 − 9.1</span>
+                </span>
+                <span>× (31.0 − 9.1) + 51</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap text-slate-600">
+                <span>=</span>
+                <span className="inline-flex flex-col items-center">
+                  <span className="border-b border-slate-400 px-1.5 pb-0.5">49</span>
+                  <span className="pt-0.5">26.3</span>
+                </span>
+                <span>× 21.9 + 51</span>
+                <span>= 40.8 + 51</span>
+                <span>= <strong className="rounded bg-amber-50 px-2 py-0.5 font-bold text-amber-900 border border-amber-200/80">AQI 92 (Moderate)</strong></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 5 */}
+          <div className="relative pl-7">
+            <span className="absolute left-0 top-0.5 flex size-4 items-center justify-center rounded-full bg-teal-700 text-[10px] font-bold text-white">
+              5
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">Step 5</span>
+              <span className="text-slate-400">·</span>
+              <h4 className="text-sm font-semibold text-slate-900">Final Ranking (Option 1 [BEST])</h4>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+              All candidate windows across the 24-hour horizon are sorted in ascending order of predicted PM2.5. The window with the lowest pollution (31.0 µg/m³) is selected as <strong>Option 1 [BEST]</strong>.
+            </p>
           </div>
         </div>
       )}
