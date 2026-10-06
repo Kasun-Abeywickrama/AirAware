@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api/client";
 import { AppHeader } from "./components/layout/AppHeader";
+import { AppFooter } from "./components/layout/AppFooter";
 import { LoadingBlock } from "./components/common/DataState";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 
@@ -51,25 +52,28 @@ function AppContent() {
   const serviceState = status.data?.status ?? (status.isError ? "unavailable" : "checking");
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <HashRedirect />
       <AppHeader serviceState={serviceState} />
-      <Suspense
-        fallback={
-          <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-            <LoadingBlock label="Loading content" />
-          </main>
-        }
-      >
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/forecast" element={<ForecastHistoryPage />} />
-          <Route path="/planner" element={<ActivityPlannerPage />} />
-          <Route path="/alerts" element={<AlertPreferencesPage />} />
-          <Route path="/methodology" element={<MethodologyPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <div className="flex-1">
+        <Suspense
+          fallback={
+            <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+              <LoadingBlock label="Loading content" />
+            </main>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/forecast" element={<ForecastHistoryPage />} />
+            <Route path="/planner" element={<ActivityPlannerPage />} />
+            <Route path="/alerts" element={<AlertPreferencesPage />} />
+            <Route path="/methodology" element={<MethodologyPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </div>
+      <AppFooter />
     </div>
   );
 }
