@@ -1,0 +1,21 @@
+{
+  "model_version": "airaware-operational-2026-08-31",
+  "base_features": [
+    "pm25", "temperature_2m", "relative_humidity_2m", "dew_point_2m",
+    "surface_pressure", "precipitation", "shortwave_radiation", "wind_speed_10m",
+    "wind_direction_sin", "wind_direction_cos", "hour_sin", "hour_cos", "doy_sin", "doy_cos"
+  ],
+  "pm25_lags": [0, 1, 2, 3, 6, 12, 24, 48, 72, 168],
+  "horizons": {
+    "1": {"model_family": "XGBoost-GRU", "tree_artifact": "1h_tree.joblib", "gru_artifact": "1h_gru.pt", "xgboost_weight": 0.25, "conformal_offset": 20.404502868652344},
+    "6": {"model_family": "XGBoost-GRU", "tree_artifact": "6h_tree.joblib", "gru_artifact": "6h_gru.pt", "xgboost_weight": 0.15, "conformal_offset": 42.90729522705078},
+    "24": {"model_family": "Extra Trees", "tree_artifact": "24h_tree.joblib", "xgboost_weight": null, "conformal_offset": 45.61611111111111}
+  },
+  "artifact_hashes": {
+    "1h_gru.pt": "5959934311b2441366de0f09f9dbc8554d47b0eb821d151c9eeab2a9450a0cdd",
+    "1h_tree.joblib": "bb3a239f07f825da1f7f11c7a59b96a1f213cc1d7d8f24fd5e7a2f7943d39aa3",
+    "6h_gru.pt": "6b32c27b5e50492339ba658df41e64fdd3afc1f3bddfad7236cfeeea3db314a7",
+    "6h_tree.joblib": "2f09d870052dc595990b68f49a5b9ffdbde51b85ad55482f1135f19cec17cde7",
+    "24h_tree.joblib": "acc87d778b5c7ba5d5241d2485106a606f27130f9325fdd299c605f0251a4e8c"
+  }
+}

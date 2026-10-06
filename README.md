@@ -1,0 +1,135 @@
+# AirAware
+
+AirAware is a New Delhi PM2.5 decision-support web application with a FastAPI backend and React frontend.
+
+## Quick Execution Guides
+- 📖 **Local Execution (Hybrid Dev Mode):** [RUN_LOCALLY.md](RUN_LOCALLY.md)
+- 🐳 **Full Containerized Execution (Docker Compose):** [RUN_DOCKER.md](RUN_DOCKER.md)
+
+## Frontend dashboard
+
+The React dashboard is in `frontend/`. Start the backend first, then run these commands from that folder:
+
+```powershell
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. Vite forwards `/api` calls to the local backend at `http://localhost:8000`.
+
+## Start with Docker
+
+1. Copy `.env.example` to `.env`.
+2. Run:
+
+   ```powershell
+   docker compose up --build
+   ```
+
+3. Open:
+   - AirAware: `http://localhost:5173`
+   - Health check: `http://localhost:8000/health`
+   - API documentation: `http://localhost:8000/docs`
+
+Stop the containers with `docker compose down`.
+
+Docker Compose also starts an operational worker. It runs ingestion and guarded forecast generation immediately, then repeats every hour. Change `WORKER_INTERVAL_SECONDS` in your private `.env` only for development testing.
+
+The database readiness check is available at `http://localhost:8000/health/database`.
+
+Public user-data endpoints:
+
+- `GET /api/v1/status`
+- `GET /api/v1/current-conditions`
+- `GET /api/v1/forecasts/latest`
+- `GET /api/v1/forecasts/history?hours=72`
+- `POST /api/v1/activity-plans`
+- `GET /api/v1/alert-preferences/{browser_id}`
+- `PUT /api/v1/alert-preferences/{browser_id}`
+
+When live data, forecasts, history, or planning results are not ready, their endpoints return a safe HTTP 503 JSON response rather than old or unreliable values.
+
+Activity plans use a New Delhi local date and a whole-hour duration. They compare forecast windows only and are not safety or medical advice. Alert preferences are anonymous browser UUID settings; AirAware does not send notifications in this version.
+
+## Run the backend locally
+
+Install dependencies:
+
+```powershell
+python -m pip install -r backend/requirements.txt
+```
+
+Start the API:
+
+```powershell
+python -m uvicorn backend.app.main:app --reload
+```
+
+Copy `.env.example` to `.env` first. The local `DATABASE_URL` in that file uses `localhost`; Docker Compose automatically uses the `postgres` service instead.
+
+## Check migrations
+
+From the `backend` folder, run:
+
+```powershell
+python -m alembic current
+```
+
+This command shows the current migration revision. Apply all migrations in Docker with:
+
+```powershell
+docker compose exec backend python -m alembic upgrade head
+```
+
+## Manual live ingestion
+
+Add your private OpenAQ API key to `.env`, then run the following from the repository root:
+
+```powershell
+docker compose exec backend python -m app.setup_station
+docker compose exec backend python -m app.workers.ingest
+```
+
+The command collects the latest PM2.5 value plus seven days of hourly PM2.5 history from OpenAQ. It also collects the full weather inputs required by the packaged operational models from Open-Meteo. It records separate PM2.5 and weather outcomes and exits with an error if either source fails.
+
+## Local forecast model files
+
+The existing trained AirAware operational models are used without retraining. They are local deployment assets, not Git files, because the 24-hour model is too large for normal Git storage.
+
+From the repository root, copy the verified artifacts once:
+
+```powershell
+New-Item -ItemType Directory -Force backend/model_artifacts
+Copy-Item ..\..\..\Forecasting\outputs\operational\artifacts\1h_gru.pt, ..\..\..\Forecasting\outputs\operational\artifacts\1h_tree.joblib, ..\..\..\Forecasting\outputs\operational\artifacts\6h_gru.pt, ..\..\..\Forecasting\outputs\operational\artifacts\6h_tree.joblib, ..\..\..\Forecasting\outputs\operational\artifacts\24h_tree.joblib backend/model_artifacts
+```
+
+The backend verifies their SHA-256 checksums before using them. Generate forecasts manually after successful live ingestion:
+
+```powershell
+docker compose exec backend python -m app.workers.forecast
+```
+
+The command stores the 1-hour, 6-hour, and 24-hour forecasts only when the required live PM2.5 and weather history is complete and fresh.
+
+## Run tests
+
+From the repository root:
+
+```powershell
+python -m pytest backend/tests
+```
+
+Run frontend checks from `frontend/`:
+
+```powershell
+npm run test
+npm run build
+```
+
+## Viva walkthrough
+
+1. **Purpose:** AirAware presents live New Delhi PM2.5 measurements and saved short-term forecasts as decision-support information.
+2. **Live-data flow:** The worker collects PM2.5 and weather data, validates it, stores approved records, and creates forecasts with the existing trained models.
+3. **User features:** The dashboard shows current conditions and forecasts; Forecast explains history and uncertainty; Activity Planner compares future time windows; Alerts stores an anonymous browser preference.
+4. **Reliability:** Every collection attempt is audited, the status endpoint reports availability, and unavailable data is shown honestly rather than estimated.
+5. **Scope:** AirAware provides comparative timing information only. It does not provide medical advice. Browser push notification delivery is a future enhancement.

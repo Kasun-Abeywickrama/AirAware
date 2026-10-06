@@ -1,0 +1,17 @@
+fastapi>=0.115,<1.0
+uvicorn>=0.30,<1.0
+sqlalchemy>=2.0,<3.0
+psycopg[binary]>=3.2,<4.0
+alembic>=1.14,<2.0
+python-dotenv>=1.0,<2.0
+pytest>=8.0,<10.0
+httpx>=0.27,<1.0
+# Match the versions used to serialize the verified operational model files.
+joblib==1.5.3
+numpy==2.4.4
+scikit-learn==1.8.0
+torch>=2.11,<3.0
+xgboost==3.4.0
+# TreeSHAP is used only while generating an explanation for a saved forecast.
+# It supports both the XGBoost and Extra Trees operational artifacts.
+shap>=0.47,<1.0

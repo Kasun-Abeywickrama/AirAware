@@ -1,0 +1,80 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PORT: ${PORT:-8000}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-airaware}:${POSTGRES_PASSWORD:-airaware_dev_password}@postgres:5432/${POSTGRES_DB:-airaware}
+      OPENAQ_API_KEY: ${OPENAQ_API_KEY:-}
+      OPENAQ_LOCATION_ID: ${OPENAQ_LOCATION_ID:-6145551}
+      OPENAQ_SENSOR_ID: ${OPENAQ_SENSOR_ID:-14745878}
+      STATION_NAME: ${STATION_NAME:-Anand Lok, New Delhi}
+      STATION_LATITUDE: ${STATION_LATITUDE:-28.5587}
+      STATION_LONGITUDE: ${STATION_LONGITUDE:-77.21886}
+      STATION_TIMEZONE: ${STATION_TIMEZONE:-Asia/Kolkata}
+      PROVIDER_TIMEOUT_SECONDS: ${PROVIDER_TIMEOUT_SECONDS:-20}
+      MAXIMUM_OBSERVATION_AGE_MINUTES: ${MAXIMUM_OBSERVATION_AGE_MINUTES:-180}
+      PM25_HISTORY_HOURS: ${PM25_HISTORY_HOURS:-168}
+      MODEL_ARTIFACT_DIRECTORY: /app/model_artifacts
+    ports:
+      - "${PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/model_artifacts:/app/model_artifacts:ro
+
+  worker:
+    build:
+      context: ./backend
+    command: python -m app.workers.scheduler
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-airaware}:${POSTGRES_PASSWORD:-airaware_dev_password}@postgres:5432/${POSTGRES_DB:-airaware}
+      OPENAQ_API_KEY: ${OPENAQ_API_KEY:-}
+      OPENAQ_LOCATION_ID: ${OPENAQ_LOCATION_ID:-6145551}
+      OPENAQ_SENSOR_ID: ${OPENAQ_SENSOR_ID:-14745878}
+      STATION_NAME: ${STATION_NAME:-Anand Lok, New Delhi}
+      STATION_LATITUDE: ${STATION_LATITUDE:-28.5587}
+      STATION_LONGITUDE: ${STATION_LONGITUDE:-77.21886}
+      STATION_TIMEZONE: ${STATION_TIMEZONE:-Asia/Kolkata}
+      PROVIDER_TIMEOUT_SECONDS: ${PROVIDER_TIMEOUT_SECONDS:-20}
+      MAXIMUM_OBSERVATION_AGE_MINUTES: ${MAXIMUM_OBSERVATION_AGE_MINUTES:-180}
+      PM25_HISTORY_HOURS: ${PM25_HISTORY_HOURS:-168}
+      MODEL_ARTIFACT_DIRECTORY: /app/model_artifacts
+      WORKER_INTERVAL_SECONDS: ${WORKER_INTERVAL_SECONDS:-3600}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/model_artifacts:/app/model_artifacts:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-airaware}
+      POSTGRES_USER: ${POSTGRES_USER:-airaware}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-airaware_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

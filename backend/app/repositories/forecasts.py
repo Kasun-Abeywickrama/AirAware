@@ -1,0 +1,136 @@
+"""Queries and inserts for saved PM2.5 forecasts."""
+
+from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from ..models.forecast import Forecast
+from ..models.forecast_explanation import ForecastExplanation
+from ..models.forecast_run import ForecastRun
+
+
+class ForecastRepository:
+    """Store forecast outputs after the full run has passed validation."""
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def create(
+        self,
+        *,
+        forecast_run_id: UUID,
+        horizon_hours: int,
+        target_at: datetime,
+        predicted_value_ug_m3: Decimal,
+        lower_bound_ug_m3: Decimal,
+        upper_bound_ug_m3: Decimal,
+    ) -> Forecast:
+        forecast = Forecast(
+            forecast_run_id=forecast_run_id,
+            horizon_hours=horizon_hours,
+            target_at=target_at,
+            predicted_value_ug_m3=predicted_value_ug_m3,
+            lower_bound_ug_m3=lower_bound_ug_m3,
+            upper_bound_ug_m3=upper_bound_ug_m3,
+        )
+        self._session.add(forecast)
+        self._session.flush()
+        return forecast
+
+    def list_for_run(self, forecast_run_id: UUID) -> list[Forecast]:
+        statement = (
+            select(Forecast)
+            .where(Forecast.forecast_run_id == forecast_run_id)
+            .order_by(Forecast.horizon_hours)
+        )
+        return list(self._session.scalars(statement).all())
+
+    def create_explanation(
+        self,
+        *,
+        forecast_id: UUID,
+        method: str,
+        baseline_value_ug_m3: Decimal,
+        completeness_error_ug_m3: Decimal,
+        factors: list[dict],
+    ) -> ForecastExplanation:
+        """Save the validated factor-level explanation for a forecast."""
+        explanation = ForecastExplanation(
+            forecast_id=forecast_id,
+            method=method,
+            baseline_value_ug_m3=baseline_value_ug_m3,
+            completeness_error_ug_m3=completeness_error_ug_m3,
+            factors=factors,
+        )
+        self._session.add(explanation)
+        self._session.flush()
+        return explanation
+
+    def explanations_for_forecasts(self, forecast_ids: list[UUID]) -> dict[UUID, ForecastExplanation]:
+        """Load explanations in one query, keyed by their forecast."""
+        if not forecast_ids:
+            return {}
+        statement = select(ForecastExplanation).where(ForecastExplanation.forecast_id.in_(forecast_ids))
+        return {item.forecast_id: item for item in self._session.scalars(statement).all()}
+
+    def list_since(
+        self, since: datetime, location_id: UUID | None = None
+    ) -> list[tuple[Forecast, ForecastRun]]:
+        """Return forecast outputs with their issue times for a recent history view."""
+        statement = (
+            select(Forecast, ForecastRun)
+            .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+            .where(Forecast.target_at >= since, ForecastRun.status == "succeeded")
+        )
+        if location_id is not None:
+            statement = statement.where(ForecastRun.location_id == location_id)
+        statement = statement.order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        results = list(self._session.execute(statement).all())
+        if not results and location_id is not None:
+            fallback_stmt = (
+                select(Forecast, ForecastRun)
+                .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+                .where(
+                    Forecast.target_at >= since,
+                    ForecastRun.status == "succeeded",
+                    ForecastRun.location_id.is_(None),
+                )
+                .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+            )
+            return list(self._session.execute(fallback_stmt).all())
+        return results
+
+    def list_for_target_range(
+        self, *, start_at: datetime, end_at: datetime, location_id: UUID | None = None
+    ) -> list[tuple[Forecast, ForecastRun]]:
+        """Return successful forecasts within a target-time range."""
+        statement = (
+            select(Forecast, ForecastRun)
+            .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+            .where(
+                Forecast.target_at >= start_at,
+                Forecast.target_at < end_at,
+                ForecastRun.status == "succeeded",
+            )
+        )
+        if location_id is not None:
+            statement = statement.where(ForecastRun.location_id == location_id)
+        statement = statement.order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        results = list(self._session.execute(statement).all())
+        if not results and location_id is not None:
+            fallback_stmt = (
+                select(Forecast, ForecastRun)
+                .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+                .where(
+                    Forecast.target_at >= start_at,
+                    Forecast.target_at < end_at,
+                    ForecastRun.status == "succeeded",
+                    ForecastRun.location_id.is_(None),
+                )
+                .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+            )
+            return list(self._session.execute(fallback_stmt).all())
+        return results
