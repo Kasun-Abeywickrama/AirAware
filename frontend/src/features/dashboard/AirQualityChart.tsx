@@ -21,10 +21,25 @@ export function buildChartData(history: ForecastHistory): ChartPoint[] {
   return [...points.values()].sort((left, right) => new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime());
 }
 
-export function AirQualityChart({ history, expanded = false }: { history: ForecastHistory; expanded?: boolean }) {
+export function AirQualityChart({
+  history,
+  expanded = false,
+  frameless = false,
+}: {
+  history: ForecastHistory;
+  expanded?: boolean;
+  frameless?: boolean;
+}) {
   const data = useMemo(() => buildChartData(history), [history]);
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="trend-heading">
+    <section
+      className={
+        frameless
+          ? "w-full"
+          : "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      }
+      aria-labelledby="trend-heading"
+    >
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <h2 id="trend-heading" className="text-lg font-semibold text-slate-950">Recent PM2.5 and forecast</h2>

@@ -99,8 +99,8 @@ export function ForecastHistoryPage() {
                   <p className="mt-1 text-xs text-slate-500">Stored data available for this range</p>
                 </article>
               </div>
-              <div className="mt-6">
-                <AirQualityChart history={history.data} expanded />
+              <div className="mt-8 border-t border-slate-100 pt-6">
+                <AirQualityChart history={history.data} expanded frameless />
               </div>
             </>
           )
