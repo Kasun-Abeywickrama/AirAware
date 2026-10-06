@@ -50,11 +50,10 @@ function WindowCards({ plan }: { plan: ActivityPlan }) {
         return (
           <li
             key={`${window.start_at}-${window.end_at}`}
-            className={`rounded-xl border p-4 transition ${
-              isBest
+            className={`rounded-xl border p-4 transition ${isBest
                 ? "border-teal-300 bg-teal-50/40 shadow-sm ring-1 ring-teal-500/20"
                 : "border-slate-200 bg-slate-50"
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -446,7 +445,6 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
             Best available times for {formatSelectedDate(plan.date)} · {plan.duration_minutes / 60}-hour activity
           </h3>
           <p className="mt-0.5 text-xs text-slate-500">
-            Ranked by lowest predicted PM2.5 (cleanest air first). Darker clock bands indicate more optimal times.
           </p>
         </div>
         <div className="inline-flex w-fit rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Result display mode">
@@ -456,9 +454,8 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
               type="button"
               role="tab"
               aria-selected={view === id}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
-                view === id ? "bg-white text-teal-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${view === id ? "bg-white text-teal-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => setView(id)}
             >
               <Icon className="size-3.5" aria-hidden="true" />
@@ -533,22 +530,20 @@ export function ActivityPlannerPage() {
                 <button
                   type="button"
                   onClick={() => setDate(todayDate)}
-                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${
-                    date === todayDate
+                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${date === todayDate
                       ? "bg-white text-teal-800 shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   Today
                 </button>
                 <button
                   type="button"
                   onClick={() => setDate(tomorrowDate)}
-                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${
-                    date === tomorrowDate
+                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${date === tomorrowDate
                       ? "bg-white text-teal-800 shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   Tomorrow
                 </button>
@@ -597,10 +592,7 @@ export function ActivityPlannerPage() {
           </button>
         </form>
 
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-          <Info className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
-          <span>Operational forecasts cover a 24-hour lookahead window (Today and Tomorrow).</span>
-        </div>
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500"></div>
 
         {isPending && (
           <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 py-12 text-center" aria-live="polite">
