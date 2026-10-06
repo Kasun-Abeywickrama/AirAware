@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, Clock3, Grid2X2, Sparkles, Table2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, ChevronDown, Clock3, Grid2X2, Info, Sparkles, Table2 } from "lucide-react";
 import { api } from "../../api/client";
 import type { ActivityPlan, ActivityPlanWindow } from "../../api/types";
 import { formatPm25 } from "../../utils/format";
+import { getAqiCategory } from "../../utils/whoAqi";
 import { UnavailablePanel } from "../../components/common/DataState";
 
 const DURATIONS = [60, 120, 180, 240, 360, 480];
 
-function newDelhiDate() {
+export function newDelhiDate(offsetDays: number = 0): string {
+  const target = new Date(Date.now() + offsetDays * 86_400_000);
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(new Date());
+  }).formatToParts(target);
   const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
   return `${value("year")}-${value("month")}-${value("day")}`;
 }
@@ -41,20 +43,51 @@ type ViewMode = "clock" | "cards" | "table";
 function WindowCards({ plan }: { plan: ActivityPlan }) {
   return (
     <ol className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {plan.windows.map((window, index) => (
-        <li key={`${window.start_at}-${window.end_at}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Option {index + 1}</p>
-          <p className="mt-2 font-semibold text-slate-950">
-            {formatTime(window.start_at)} – {formatTime(window.end_at)}
-          </p>
-          <p className="mt-3 text-sm text-slate-600">
-            Mean forecast: <span className="font-semibold text-slate-900">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span>
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            Mean upper range: <span className="font-semibold text-slate-900">{formatPm25(window.mean_upper_bound_ug_m3)} µg/m³</span>
-          </p>
-        </li>
-      ))}
+      {plan.windows.map((window, index) => {
+        const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+        const isBest = index === 0;
+        return (
+          <li
+            key={`${window.start_at}-${window.end_at}`}
+            className={`rounded-xl border p-4 transition ${
+              isBest
+                ? "border-teal-300 bg-teal-50/40 shadow-sm ring-1 ring-teal-500/20"
+                : "border-slate-200 bg-slate-50"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Option {index + 1}</p>
+                {isBest && (
+                  <span className="rounded bg-teal-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                    Best
+                  </span>
+                )}
+              </div>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
+              >
+                <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
+                {aqi.label}
+              </span>
+            </div>
+            <p className="mt-2 font-semibold text-slate-950">
+              {formatTime(window.start_at)} – {formatTime(window.end_at)}
+            </p>
+            <p className="mt-3 text-sm text-slate-600">
+              Mean forecast:{" "}
+              <span className="font-semibold text-slate-900">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span>
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Mean upper range:{" "}
+              <span className="font-semibold text-slate-900">{formatPm25(window.mean_upper_bound_ug_m3)} µg/m³</span>
+            </p>
+            <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
+              {aqi.guidance}
+            </p>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -68,21 +101,46 @@ function WindowTable({ plan }: { plan: ActivityPlan }) {
           <tr>
             <th className="px-4 py-3 font-semibold">Option</th>
             <th className="px-4 py-3 font-semibold">Time</th>
+            <th className="px-4 py-3 font-semibold">Air Quality (EPA AQI)</th>
             <th className="px-4 py-3 font-semibold">Mean forecast</th>
             <th className="px-4 py-3 font-semibold">Upper range</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
-          {plan.windows.map((window, index) => (
-            <tr key={`${window.start_at}-${window.end_at}`}>
-              <td className="px-4 py-3 font-semibold text-teal-700">{index + 1}</td>
-              <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
-                {formatTime(window.start_at)} – {formatTime(window.end_at)}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</td>
-              <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatPm25(window.mean_upper_bound_ug_m3)} µg/m³</td>
-            </tr>
-          ))}
+          {plan.windows.map((window, index) => {
+            const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+            return (
+              <tr key={`${window.start_at}-${window.end_at}`}>
+                <td className="px-4 py-3 font-semibold text-teal-700">
+                  <div className="flex items-center gap-1.5">
+                    <span>{index + 1}</span>
+                    {index === 0 && (
+                      <span className="rounded bg-teal-100 px-1 py-0.5 text-[10px] font-bold text-teal-800">
+                        BEST
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                  {formatTime(window.start_at)} – {formatTime(window.end_at)}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
+                  >
+                    <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
+                    {aqi.label}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                  {formatPm25(window.mean_predicted_value_ug_m3)} µg/m³
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                  {formatPm25(window.mean_upper_bound_ug_m3)} µg/m³
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -165,19 +223,38 @@ function ClockFace({ window, windows }: { window: ActivityPlanWindow; windows: A
 function ClockCircles({ plan }: { plan: ActivityPlan }) {
   return (
     <ol className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
-      {plan.windows.map((window, index) => (
-        <li key={`${window.start_at}-${window.end_at}`} className="text-center">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-teal-700">Option {index + 1}</p>
-          <ClockFace window={window} windows={plan.windows} />
-          <p className="mt-2 text-sm font-semibold text-slate-900">
-            {formatTime(window.start_at)} – {formatTime(window.end_at)}
-          </p>
-          <p className="mt-1 text-xs text-slate-600">
-            Forecast <span className="font-semibold text-slate-800">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span> · Upper{" "}
-            {formatPm25(window.mean_upper_bound_ug_m3)}
-          </p>
-        </li>
-      ))}
+      {plan.windows.map((window, index) => {
+        const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+        return (
+          <li
+            key={`${window.start_at}-${window.end_at}`}
+            className="flex flex-col items-center rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-center"
+          >
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Option {index + 1}</p>
+              {index === 0 && (
+                <span className="rounded bg-teal-700 px-1 text-[9px] font-bold uppercase text-white">Best</span>
+              )}
+            </div>
+            <div className="my-2">
+              <ClockFace window={window} windows={plan.windows} />
+            </div>
+            <p className="text-sm font-semibold text-slate-950">
+              {formatTime(window.start_at)} – {formatTime(window.end_at)}
+            </p>
+            <span
+              className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
+            >
+              <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
+              {aqi.label}
+            </span>
+            <p className="mt-1.5 text-xs text-slate-600">
+              Forecast <span className="font-semibold text-slate-800">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span> · Upper{" "}
+              {formatPm25(window.mean_upper_bound_ug_m3)}
+            </p>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -224,9 +301,23 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
 }
 
 export function ActivityPlannerPage() {
-  const [date, setDate] = useState(newDelhiDate);
+  const todayDate = newDelhiDate(0);
+  const tomorrowDate = newDelhiDate(1);
+  const [date, setDate] = useState(todayDate);
   const [duration, setDuration] = useState(60);
-  const planner = useMutation({ mutationFn: () => api.activityPlan(date, duration) });
+
+  const {
+    data: plan,
+    isPending,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["activityPlan", date, duration],
+    queryFn: () => api.activityPlan(date, duration),
+    staleTime: 60_000,
+  });
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
@@ -247,38 +338,71 @@ export function ActivityPlannerPage() {
             <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
               Plan your outdoor activity
             </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">Select your intended date and activity duration to calculate optimal windows.</p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Select your intended date and activity duration to calculate optimal windows.
+            </p>
           </div>
         </div>
+
         <form
-          className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+          className="mt-6 grid gap-4 md:grid-cols-[1.2fr_1fr_auto] md:items-end"
           onSubmit={(event) => {
             event.preventDefault();
-            planner.mutate();
+            refetch();
           }}
         >
-          <label className="grid gap-2 text-sm font-medium text-slate-800">
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="size-4 text-teal-700" aria-hidden="true" />
-              Date
-            </span>
+          <div className="grid gap-2 text-sm font-medium text-slate-800">
+            <div className="flex items-center justify-between">
+              <label htmlFor="planner-date" className="flex items-center gap-1.5 font-medium text-slate-800">
+                <CalendarDays className="size-4 text-teal-700" aria-hidden="true" />
+                Date
+              </label>
+              <div className="inline-flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="Quick date selector">
+                <button
+                  type="button"
+                  onClick={() => setDate(todayDate)}
+                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${
+                    date === todayDate
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDate(tomorrowDate)}
+                  className={`rounded-md px-2 py-0.5 text-xs font-semibold transition ${
+                    date === tomorrowDate
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Tomorrow
+                </button>
+              </div>
+            </div>
             <input
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-teal-700"
+              id="planner-date"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
               type="date"
               value={date}
-              min={newDelhiDate()}
+              min={todayDate}
+              max={tomorrowDate}
               onChange={(event) => setDate(event.target.value)}
               required
             />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-800">
-            <span className="flex items-center gap-1.5">
+          </div>
+
+          <div className="grid gap-2 text-sm font-medium text-slate-800">
+            <label htmlFor="planner-duration" className="flex items-center gap-1.5 font-medium text-slate-800">
               <Clock3 className="size-4 text-teal-700" aria-hidden="true" />
               Duration
-            </span>
+            </label>
             <div className="relative">
               <select
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
+                id="planner-duration"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-3.5 pr-10 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
                 value={duration}
                 onChange={(event) => setDuration(Number(event.target.value))}
               >
@@ -290,24 +414,44 @@ export function ActivityPlannerPage() {
               </select>
               <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
             </div>
-          </label>
+          </div>
+
           <button
-            className="rounded-lg bg-teal-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-lg bg-teal-700 px-5 py-2 font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             type="submit"
-            disabled={planner.isPending}
+            disabled={isPending || isFetching}
           >
-            {planner.isPending ? "Finding times…" : "Find best times"}
+            {isFetching ? "Updating times…" : "Refresh times"}
           </button>
         </form>
-        {planner.isError && (
+
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+          <Info className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+          <span>Operational forecasts cover a 24-hour lookahead window (Today and Tomorrow).</span>
+        </div>
+
+        {isPending && (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 py-12 text-center" aria-live="polite">
+            <div className="size-6 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
+            <p className="mt-3 text-sm font-medium text-slate-700">Finding optimal outdoor windows…</p>
+            <p className="mt-1 text-xs text-slate-500">Evaluating hourly PM2.5 forecasts for New Delhi</p>
+          </div>
+        )}
+
+        {isError && !isPending && (
           <div className="mt-5">
             <UnavailablePanel
               title="No complete plan is available"
-              message={planner.error instanceof Error ? planner.error.message : "Try a different future date or duration."}
+              message={
+                error instanceof Error && error.message
+                  ? error.message
+                  : "No continuous forecast window is available for this combination. Try switching between Today and Tomorrow or selecting a shorter duration."
+              }
             />
           </div>
         )}
-        {planner.data && <PlanResults plan={planner.data} />}
+
+        {plan && !isPending && <PlanResults plan={plan} />}
       </section>
     </main>
   );
