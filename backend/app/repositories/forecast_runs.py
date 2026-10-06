@@ -1,6 +1,5 @@
-"""State changes for operational forecast runs."""
-
 from datetime import datetime, timezone
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,8 +13,19 @@ class ForecastRunRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def start(self, *, issued_at: datetime, model_version: str) -> ForecastRun:
-        run = ForecastRun(issued_at=issued_at, model_version=model_version, status="running")
+    def start(
+        self,
+        *,
+        issued_at: datetime,
+        model_version: str,
+        location_id: UUID | None = None,
+    ) -> ForecastRun:
+        run = ForecastRun(
+            issued_at=issued_at,
+            model_version=model_version,
+            status="running",
+            location_id=location_id,
+        )
         self._session.add(run)
         self._session.flush()
         return run
@@ -35,15 +45,40 @@ class ForecastRunRepository:
         self._session.flush()
         return run
 
-    def latest_succeeded(self) -> ForecastRun | None:
+    def latest_succeeded(self, location_id: UUID | None = None) -> ForecastRun | None:
+        statement = select(ForecastRun).where(ForecastRun.status == "succeeded")
+        if location_id is not None:
+            station_run = self._session.scalar(
+                statement.where(ForecastRun.location_id == location_id)
+                .order_by(ForecastRun.issued_at.desc())
+                .limit(1)
+            )
+            if station_run is not None:
+                return station_run
+            return self._session.scalar(
+                statement.where(ForecastRun.location_id.is_(None))
+                .order_by(ForecastRun.issued_at.desc())
+                .limit(1)
+            )
         return self._session.scalar(
-            select(ForecastRun)
-            .where(ForecastRun.status == "succeeded")
-            .order_by(ForecastRun.issued_at.desc())
-            .limit(1)
+            statement.order_by(ForecastRun.issued_at.desc()).limit(1)
         )
 
-    def get_latest(self) -> ForecastRun | None:
+    def get_latest(self, location_id: UUID | None = None) -> ForecastRun | None:
+        statement = select(ForecastRun)
+        if location_id is not None:
+            station_run = self._session.scalar(
+                statement.where(ForecastRun.location_id == location_id)
+                .order_by(ForecastRun.issued_at.desc())
+                .limit(1)
+            )
+            if station_run is not None:
+                return station_run
+            return self._session.scalar(
+                statement.where(ForecastRun.location_id.is_(None))
+                .order_by(ForecastRun.issued_at.desc())
+                .limit(1)
+            )
         return self._session.scalar(
-            select(ForecastRun).order_by(ForecastRun.issued_at.desc()).limit(1)
+            statement.order_by(ForecastRun.issued_at.desc()).limit(1)
         )

@@ -34,9 +34,6 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
             service = None
             model_version = "unavailable"
 
-        runs = ForecastRunRepository(session)
-        events = SystemEventRepository(session)
-        run = runs.start(issued_at=issued_at, model_version=model_version)
         location = MonitoringLocationRepository(session).get_by_provider_location_id(
             "openaq", str(active_settings.openaq_location_id)
         )
@@ -44,6 +41,14 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
             raise ForecastGenerationError("Configured monitoring location is unavailable.")
         if service is None:
             raise ForecastGenerationError("Required forecast model files are unavailable.")
+
+        runs = ForecastRunRepository(session)
+        events = SystemEventRepository(session)
+        run = runs.start(
+            issued_at=issued_at,
+            model_version=model_version,
+            location_id=location.id,
+        )
 
         readiness = check_forecast_input_readiness(
             session, location_id=location.id, settings=active_settings
@@ -125,6 +130,7 @@ def _backfill_historical_forecasts(
             select(ForecastRun).where(
                 ForecastRun.issued_at >= since,
                 ForecastRun.status == "succeeded",
+                ForecastRun.location_id == location.id,
             )
         ).all()
         existing_hours = {
@@ -162,7 +168,9 @@ def _backfill_historical_forecasts(
                 if readiness.ready and readiness.issue_at is not None:
                     try:
                         backfill_run = runs_repo.start(
-                            issued_at=current_hour, model_version=service.model_version
+                            issued_at=current_hour,
+                            model_version=service.model_version,
+                            location_id=location.id,
                         )
                         forecasts, input_ver = service.generate(
                             pm25_records=historical_pm,

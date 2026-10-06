@@ -76,18 +76,35 @@ class ForecastRepository:
         statement = select(ForecastExplanation).where(ForecastExplanation.forecast_id.in_(forecast_ids))
         return {item.forecast_id: item for item in self._session.scalars(statement).all()}
 
-    def list_since(self, since: datetime) -> list[tuple[Forecast, ForecastRun]]:
+    def list_since(
+        self, since: datetime, location_id: UUID | None = None
+    ) -> list[tuple[Forecast, ForecastRun]]:
         """Return forecast outputs with their issue times for a recent history view."""
         statement = (
             select(Forecast, ForecastRun)
             .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
             .where(Forecast.target_at >= since, ForecastRun.status == "succeeded")
-            .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
         )
-        return list(self._session.execute(statement).all())
+        if location_id is not None:
+            statement = statement.where(ForecastRun.location_id == location_id)
+        statement = statement.order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        results = list(self._session.execute(statement).all())
+        if not results and location_id is not None:
+            fallback_stmt = (
+                select(Forecast, ForecastRun)
+                .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+                .where(
+                    Forecast.target_at >= since,
+                    ForecastRun.status == "succeeded",
+                    ForecastRun.location_id.is_(None),
+                )
+                .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+            )
+            return list(self._session.execute(fallback_stmt).all())
+        return results
 
     def list_for_target_range(
-        self, *, start_at: datetime, end_at: datetime
+        self, *, start_at: datetime, end_at: datetime, location_id: UUID | None = None
     ) -> list[tuple[Forecast, ForecastRun]]:
         """Return successful forecasts within a target-time range."""
         statement = (
@@ -98,6 +115,22 @@ class ForecastRepository:
                 Forecast.target_at < end_at,
                 ForecastRun.status == "succeeded",
             )
-            .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
         )
-        return list(self._session.execute(statement).all())
+        if location_id is not None:
+            statement = statement.where(ForecastRun.location_id == location_id)
+        statement = statement.order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+        results = list(self._session.execute(statement).all())
+        if not results and location_id is not None:
+            fallback_stmt = (
+                select(Forecast, ForecastRun)
+                .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
+                .where(
+                    Forecast.target_at >= start_at,
+                    Forecast.target_at < end_at,
+                    ForecastRun.status == "succeeded",
+                    ForecastRun.location_id.is_(None),
+                )
+                .order_by(Forecast.target_at, ForecastRun.issued_at.desc())
+            )
+            return list(self._session.execute(fallback_stmt).all())
+        return results

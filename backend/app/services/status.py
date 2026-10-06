@@ -7,10 +7,12 @@ from typing import Literal, TypedDict
 from sqlalchemy.exc import SQLAlchemyError
 
 from .. import database
+from ..config import get_settings
 from ..models.ingestion_run import IngestionRun
 from ..models.forecast_run import ForecastRun
 from ..repositories.forecast_runs import ForecastRunRepository
 from ..repositories.ingestion_runs import IngestionRunRepository
+from ..repositories.monitoring_locations import MonitoringLocationRepository
 
 
 SourceAvailability = Literal["available", "not_started", "unavailable"]
@@ -102,11 +104,24 @@ def get_public_status() -> PublicStatusResult:
         session = database.get_session_factory()()
         try:
             repository = IngestionRunRepository(session)
+            location = None
+            try:
+                settings = get_settings()
+                location = MonitoringLocationRepository(session).get_by_provider_location_id(
+                    "openaq", str(settings.openaq_location_id)
+                )
+            except Exception:
+                location = None
+            location_id = location.id if location else None
+            try:
+                forecast_run = ForecastRunRepository(session).get_latest(location_id=location_id)
+            except TypeError:
+                forecast_run = ForecastRunRepository(session).get_latest()
             return build_public_status(
                 database_connected=True,
                 pm25_run=repository.get_latest("pm25"),
                 weather_run=repository.get_latest("weather"),
-                forecast_run=ForecastRunRepository(session).get_latest(),
+                forecast_run=forecast_run,
             )
         finally:
             session.close()

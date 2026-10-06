@@ -125,6 +125,16 @@ def test_forecast_repositories_create_run_and_output() -> None:
     assert session.flush_count == 2
 
 
+def test_forecast_run_can_be_associated_with_location_id() -> None:
+    session = FakeSession()
+    run = ForecastRunRepository(session).start(
+        issued_at=ISSUE_AT,
+        model_version="airaware-operational-2026-08-31",
+        location_id=LOCATION_ID,
+    )
+    assert run.location_id == LOCATION_ID
+
+
 def test_packaged_model_service_generates_all_horizons(monkeypatch) -> None:
     service = PackagedModelService(settings())
     pm25, weather = input_records()

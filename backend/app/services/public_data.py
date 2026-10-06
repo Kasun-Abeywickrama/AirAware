@@ -80,9 +80,21 @@ def get_latest_forecasts() -> PublicDataResult:
         return unavailable("Forecasts are temporarily unavailable.", "DATABASE_UNAVAILABLE")
 
     try:
+        settings = get_settings()
         session = database.get_session_factory()()
         try:
-            run = ForecastRunRepository(session).latest_succeeded()
+            location = None
+            try:
+                location = MonitoringLocationRepository(session).get_by_provider_location_id(
+                    "openaq", str(settings.openaq_location_id)
+                )
+            except Exception:
+                location = None
+            location_id = location.id if location else None
+            try:
+                run = ForecastRunRepository(session).latest_succeeded(location_id=location_id)
+            except TypeError:
+                run = ForecastRunRepository(session).latest_succeeded()
             if run is None:
                 return unavailable("Forecasts are not available yet.", "FORECASTS_NOT_AVAILABLE")
             forecasts = ForecastRepository(session).list_for_run(run.id)

@@ -44,7 +44,9 @@ def get_forecast_history(hours: int) -> PublicDataResult:
             observations = Pm25ObservationRepository(session).list_since(
                 location_id=location.id, since=since
             )
-            forecast_pairs = ForecastRepository(session).list_since(since)
+            forecast_pairs = ForecastRepository(session).list_since(
+                since, location_id=location.id
+            )
             latest_by_target = _latest_by_target(forecast_pairs)
             if not observations and not latest_by_target:
                 return unavailable("History is not available yet.", "HISTORY_NOT_AVAILABLE")
@@ -87,9 +89,12 @@ def create_activity_plan(
     try:
         session = database.get_session_factory()()
         try:
+            location = _location(session)
+            location_id = location.id if location else None
             pairs = ForecastRepository(session).list_for_target_range(
                 start_at=start_local.astimezone(timezone.utc),
                 end_at=end_local.astimezone(timezone.utc),
+                location_id=location_id,
             )
             latest_by_target = _latest_by_target(pairs)
             future = [
