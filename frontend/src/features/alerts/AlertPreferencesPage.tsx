@@ -6,7 +6,11 @@ import { formatDateTime } from "../../utils/format";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 
 const BROWSER_ID_KEY = "airaware-browser-id";
-const QUICK_THRESHOLDS = [50, 100, 150];
+const QUICK_THRESHOLDS: Array<{ value: number; label: string; desc: string }> = [
+  { value: 35, label: "35 µg/m³", desc: "Moderate limit" },
+  { value: 55, label: "55 µg/m³", desc: "Sensitive limit" },
+  { value: 125, label: "125 µg/m³", desc: "Unhealthy limit" },
+];
 
 function anonymousBrowserId() {
   const savedId = window.localStorage.getItem(BROWSER_ID_KEY);
@@ -22,7 +26,7 @@ function errorMessage(error: unknown) {
 
 export function AlertPreferencesPage() {
   const [browserId] = useState(anonymousBrowserId);
-  const [threshold, setThreshold] = useState(70);
+  const [threshold, setThreshold] = useState(55);
   const [enabled, setEnabled] = useState(true);
   const [initialised, setInitialised] = useState(false);
   const queryClient = useQueryClient();
@@ -102,18 +106,29 @@ export function AlertPreferencesPage() {
                 </span>
               </label>
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick values</p>
-                <div className="mt-2 flex gap-2">
-                  {QUICK_THRESHOLDS.map((value) => (
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  EPA Reference Thresholds
+                </p>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {QUICK_THRESHOLDS.map(({ value, label, desc }) => (
                     <button
                       key={value}
                       type="button"
                       onClick={() => setThreshold(value)}
-                      className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
-                        threshold === value ? "border-teal-700 bg-teal-700 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-teal-500"
+                      className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center transition ${
+                        threshold === value
+                          ? "border-teal-700 bg-teal-700 text-white shadow-xs"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-teal-500"
                       }`}
                     >
-                      {value}
+                      <span className="text-xs font-bold">{label}</span>
+                      <span
+                        className={`text-[10px] ${
+                          threshold === value ? "text-teal-100" : "text-slate-500"
+                        }`}
+                      >
+                        {desc}
+                      </span>
                     </button>
                   ))}
                 </div>

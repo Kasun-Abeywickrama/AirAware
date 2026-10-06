@@ -16,11 +16,15 @@ const ActivityPlannerPage = lazy(() =>
 const AlertPreferencesPage = lazy(() =>
   import("./features/alerts/AlertPreferencesPage").then((module) => ({ default: module.AlertPreferencesPage })),
 );
+const MethodologyPage = lazy(() =>
+  import("./features/methodology/MethodologyPage").then((module) => ({ default: module.MethodologyPage })),
+);
 
 function pageFromHash(): Page {
   if (window.location.hash === "#forecast") return "forecast";
   if (window.location.hash === "#planner") return "planner";
   if (window.location.hash === "#alerts") return "alerts";
+  if (window.location.hash === "#methodology") return "methodology";
   return "dashboard";
 }
 
@@ -66,7 +70,7 @@ export default function App() {
             <ActivityPlannerPage />
           </Suspense>
         </>
-      ) : (
+      ) : page === "alerts" ? (
         <>
           <AppHeader page="alerts" serviceState={serviceState} />
           <Suspense
@@ -77,6 +81,19 @@ export default function App() {
             }
           >
             <AlertPreferencesPage />
+          </Suspense>
+        </>
+      ) : (
+        <>
+          <AppHeader page="methodology" serviceState={serviceState} />
+          <Suspense
+            fallback={
+              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+                <LoadingBlock label="Loading standards & methodology" />
+              </main>
+            }
+          >
+            <MethodologyPage />
           </Suspense>
         </>
       )}

@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 import type { Availability } from "../../api/types";
 import { StatusBadge } from "../common/StatusBadge";
 
-export type Page = "dashboard" | "forecast" | "planner" | "alerts";
+export type Page = "dashboard" | "forecast" | "planner" | "alerts" | "methodology";
 
 export function AppHeader({ page, serviceState }: { page: Page; serviceState: Availability | "checking" }) {
   return (
@@ -57,6 +57,15 @@ export function AppHeader({ page, serviceState }: { page: Page; serviceState: Av
               aria-current={page === "alerts" ? "page" : undefined}
             >
               Alerts
+            </a>
+            <a
+              href="#methodology"
+              className={`border-b-2 py-2 text-sm font-semibold transition ${
+                page === "methodology" ? "border-teal-700 text-teal-800" : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-950"
+              }`}
+              aria-current={page === "methodology" ? "page" : undefined}
+            >
+              Methodology
             </a>
           </nav>
           <span className="hidden h-5 w-px bg-slate-200 sm:block" aria-hidden="true" />

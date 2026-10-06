@@ -4,7 +4,7 @@ import { CalendarDays, ChevronDown, Clock3, Grid2X2, Info, Sparkles, Table2 } fr
 import { api } from "../../api/client";
 import type { ActivityPlan, ActivityPlanWindow } from "../../api/types";
 import { formatPm25 } from "../../utils/format";
-import { getAqiCategory } from "../../utils/whoAqi";
+import { calculateAqi, getAqiCategory } from "../../utils/aqi";
 import { UnavailablePanel } from "../../components/common/DataState";
 
 const DURATIONS = [60, 120, 180, 240, 360, 480];
@@ -45,6 +45,7 @@ function WindowCards({ plan }: { plan: ActivityPlan }) {
     <ol className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {plan.windows.map((window, index) => {
         const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+        const aqiScore = calculateAqi(window.mean_predicted_value_ug_m3);
         const isBest = index === 0;
         return (
           <li
@@ -68,7 +69,8 @@ function WindowCards({ plan }: { plan: ActivityPlan }) {
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
               >
                 <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
-                {aqi.label}
+                <span>{aqi.label}</span>
+                <span className="font-bold opacity-80">· AQI {aqiScore}</span>
               </span>
             </div>
             <p className="mt-2 font-semibold text-slate-950">
@@ -109,6 +111,7 @@ function WindowTable({ plan }: { plan: ActivityPlan }) {
         <tbody className="divide-y divide-slate-200 bg-white">
           {plan.windows.map((window, index) => {
             const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+            const aqiScore = calculateAqi(window.mean_predicted_value_ug_m3);
             return (
               <tr key={`${window.start_at}-${window.end_at}`}>
                 <td className="px-4 py-3 font-semibold text-teal-700">
@@ -129,7 +132,8 @@ function WindowTable({ plan }: { plan: ActivityPlan }) {
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
                   >
                     <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
-                    {aqi.label}
+                    <span>{aqi.label}</span>
+                    <span className="font-bold opacity-80">· AQI {aqiScore}</span>
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-slate-700">
@@ -225,6 +229,7 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
     <ol className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
       {plan.windows.map((window, index) => {
         const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
+        const aqiScore = calculateAqi(window.mean_predicted_value_ug_m3);
         return (
           <li
             key={`${window.start_at}-${window.end_at}`}
@@ -246,7 +251,8 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
               className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${aqi.colors.badge} ${aqi.colors.text}`}
             >
               <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
-              {aqi.label}
+              <span>{aqi.shortLabel}</span>
+              <span className="font-bold opacity-80">· {aqiScore}</span>
             </span>
             <p className="mt-1.5 text-xs text-slate-600">
               Forecast <span className="font-semibold text-slate-800">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span> · Upper{" "}

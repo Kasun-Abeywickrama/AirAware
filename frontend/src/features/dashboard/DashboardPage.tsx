@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, CloudSun } from "lucide-react";
 import { api } from "../../api/client";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
-import { WhoAqiBadge } from "../../components/common/WhoAqiBadge";
+import { AqiBadge } from "../../components/common/AqiBadge";
 import { ForecastCard } from "../forecast/ForecastCard";
 import { AppHeader } from "../../components/layout/AppHeader";
 import { formatDateTime, formatPm25, formatRelativeAge } from "../../utils/format";
-import { type WhoCategory, type WhoCategoryInfo, getWhoCategory } from "../../utils/whoAqi";
+import { EPA_AQI_SCALE, getAqiCategory } from "../../utils/aqi";
 
 const FIVE_MINUTES = 5 * 60_000;
 const ONE_MINUTE = 60_000;
@@ -19,52 +19,8 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-const EPA_AQI_SCALE: Array<{
-  category: WhoCategory;
-  label: string;
-  range: string;
-  colors: WhoCategoryInfo["colors"];
-}> = [
-  {
-    category: "good",
-    label: "Good",
-    range: "0–9.0",
-    colors: { badge: "bg-emerald-100", text: "text-emerald-800", dot: "bg-emerald-500", heroBadge: "", heroText: "" },
-  },
-  {
-    category: "moderate",
-    label: "Moderate",
-    range: "9.1–35.4",
-    colors: { badge: "bg-yellow-100", text: "text-yellow-800", dot: "bg-yellow-500", heroBadge: "", heroText: "" },
-  },
-  {
-    category: "unhealthy_sensitive",
-    label: "Sensitive",
-    range: "35.5–55.4",
-    colors: { badge: "bg-orange-100", text: "text-orange-800", dot: "bg-orange-500", heroBadge: "", heroText: "" },
-  },
-  {
-    category: "unhealthy",
-    label: "Unhealthy",
-    range: "55.5–125.4",
-    colors: { badge: "bg-red-100", text: "text-red-800", dot: "bg-red-500", heroBadge: "", heroText: "" },
-  },
-  {
-    category: "very_unhealthy",
-    label: "Very Unhealthy",
-    range: "125.5–225.4",
-    colors: { badge: "bg-purple-100", text: "text-purple-900", dot: "bg-purple-600", heroBadge: "", heroText: "" },
-  },
-  {
-    category: "hazardous",
-    label: "Hazardous",
-    range: "≥ 225.5",
-    colors: { badge: "bg-rose-950/15", text: "text-rose-950", dot: "bg-rose-950", heroBadge: "", heroText: "" },
-  },
-];
-
-function WhoScaleLegend({ currentPm25 }: { currentPm25: number }) {
-  const active = getWhoCategory(currentPm25);
+function AqiScaleLegend({ currentPm25 }: { currentPm25: number }) {
+  const active = getAqiCategory(currentPm25);
   return (
     <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 sm:px-4">
       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
@@ -72,7 +28,7 @@ function WhoScaleLegend({ currentPm25 }: { currentPm25: number }) {
         <span className="text-[11px] text-slate-400">PM2.5 (µg/m³)</span>
       </div>
       <ol className="grid grid-cols-2 gap-1.5 sm:flex sm:gap-1.5" aria-label="US EPA AQI PM2.5 air quality scale">
-        {EPA_AQI_SCALE.map(({ category, label, range, colors }) => {
+        {EPA_AQI_SCALE.map(({ category, shortLabel, range, colors }) => {
           const isCurrent = active.category === category;
           return (
             <li
@@ -87,7 +43,7 @@ function WhoScaleLegend({ currentPm25 }: { currentPm25: number }) {
               <div className="flex items-center gap-2.5">
                 <span className={`size-2 shrink-0 rounded-full ${colors.dot}`} aria-hidden="true" />
                 <span className={`font-semibold ${isCurrent ? colors.text : "text-slate-800"}`}>
-                  {label}
+                  {shortLabel}
                 </span>
               </div>
               <span className="text-[11px] text-slate-500">{range}</span>
@@ -151,7 +107,7 @@ export function DashboardPage() {
                         {formatPm25(conditions.data.pm25.value_ug_m3)} <span className="text-xl font-medium text-teal-100">µg/m³</span>
                       </p>
                     </div>
-                    <WhoAqiBadge pm25={conditions.data.pm25.value_ug_m3} variant="hero" />
+                    <AqiBadge pm25={conditions.data.pm25.value_ug_m3} variant="hero" />
                   </div>
                   <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <p className="text-sm text-teal-100">
@@ -163,7 +119,7 @@ export function DashboardPage() {
                     </div>
                   </div>
                 </article>
-                <WhoScaleLegend currentPm25={conditions.data.pm25.value_ug_m3} />
+                <AqiScaleLegend currentPm25={conditions.data.pm25.value_ug_m3} />
               </>
             )
           )}
