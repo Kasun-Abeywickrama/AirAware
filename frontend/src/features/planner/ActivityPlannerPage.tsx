@@ -265,18 +265,20 @@ function PlannerExplanation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="mt-5 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 sm:p-3.5 transition">
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 transition" aria-label="Calculation methodology">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-left text-xs font-semibold text-slate-700 hover:text-teal-900 transition focus:outline-none"
+        className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-800 hover:text-teal-900 transition focus:outline-none"
         aria-expanded={isOpen}
       >
-        <span className="flex items-center gap-2">
-          <Info className="size-4 text-teal-600" aria-hidden="true" />
-          <span>Step-by-step: How these values are calculated</span>
+        <span className="flex items-center gap-2.5">
+          <div className="rounded-lg bg-teal-50 p-1.5 text-teal-700">
+            <Info className="size-4" aria-hidden="true" />
+          </div>
+          <span>Step-by-step: How are these values calculated?</span>
         </span>
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
           <span>{isOpen ? "Hide calculation" : "View calculation steps"}</span>
           <ChevronDown
             className={`size-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -286,10 +288,10 @@ function PlannerExplanation() {
       </button>
 
       {isOpen && (
-        <div className="mt-3.5 border-t border-slate-200/80 pt-3.5 text-xs text-slate-700">
-          <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-700">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {/* Step 1 */}
-            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
               <div className="flex items-center justify-between">
                 <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
                   Step 1
@@ -303,7 +305,7 @@ function PlannerExplanation() {
             </div>
 
             {/* Step 2 */}
-            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
               <div className="flex items-center justify-between">
                 <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
                   Step 2
@@ -311,7 +313,7 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">Forecast PM2.5</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">Hourly Prediction Average</p>
-              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60">
+              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs">
                 Mean = (Hour₁ + Hour₂) / 2
               </div>
               <p className="mt-1 text-slate-500 text-[10.5px]">
@@ -320,7 +322,7 @@ function PlannerExplanation() {
             </div>
 
             {/* Step 3 */}
-            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
               <div className="flex items-center justify-between">
                 <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
                   Step 3
@@ -328,7 +330,7 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">Upper Range</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">95% Confidence Upper Bound</p>
-              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60">
+              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs">
                 Upper = (Upper₁ + Upper₂) / 2
               </div>
               <p className="mt-1 text-slate-500 text-[10.5px]">
@@ -337,7 +339,7 @@ function PlannerExplanation() {
             </div>
 
             {/* Step 4 */}
-            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs md:col-span-2 lg:col-span-2">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 md:col-span-2 lg:col-span-2">
               <div className="flex items-center justify-between">
                 <span className="rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 border border-amber-200/60">
                   Step 4
@@ -345,7 +347,7 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">US EPA 2024 Formula</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">Piecewise Linear AQI Conversion</p>
-              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60 overflow-x-auto">
+              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs overflow-x-auto">
                 AQI = [ (I_high - I_low) / (C_high - C_low) ] × (C - C_low) + I_low
               </div>
               <p className="mt-1 text-slate-500 text-[10.5px]">
@@ -354,7 +356,7 @@ function PlannerExplanation() {
             </div>
 
             {/* Step 5 */}
-            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
               <div className="flex items-center justify-between">
                 <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200/60">
                   Step 5
@@ -369,7 +371,7 @@ function PlannerExplanation() {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -414,8 +416,7 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
         {view === "cards" && <WindowCards plan={plan} />}
         {view === "table" && <WindowTable plan={plan} />}
       </div>
-      <PlannerExplanation />
-      <p className="mt-3 text-xs leading-5 text-slate-500">{plan.disclaimer}</p>
+      <p className="mt-4 text-xs leading-5 text-slate-500">{plan.disclaimer}</p>
     </div>
   );
 }
@@ -573,6 +574,8 @@ export function ActivityPlannerPage() {
 
         {plan && !isPending && <PlanResults plan={plan} />}
       </section>
+
+      {plan && !isPending && <PlannerExplanation />}
     </main>
   );
 }
