@@ -248,7 +248,7 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
             >
               <span className={`size-1.5 rounded-full ${aqi.colors.dot}`} aria-hidden="true" />
               <span>{aqi.shortLabel}</span>
-              <span className="font-bold opacity-80">· {aqiScore}</span>
+              <span className="font-bold opacity-80">· AQI {aqiScore}</span>
             </span>
             <p className="mt-1.5 text-xs text-slate-600">
               Forecast <span className="font-semibold text-slate-800">{formatPm25(window.mean_predicted_value_ug_m3)} µg/m³</span> · Upper{" "}
