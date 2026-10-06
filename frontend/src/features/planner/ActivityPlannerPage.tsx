@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, Clock3, Grid2X2, Info, Sparkles, Table2 } from "lucide-react";
+import { CalendarDays, ChevronDown, Clock3, Grid2X2, Info, Table2 } from "lucide-react";
 import { api } from "../../api/client";
 import type { ActivityPlan, ActivityPlanWindow } from "../../api/types";
 import { formatPm25 } from "../../utils/format";
@@ -507,18 +507,13 @@ export function ActivityPlannerPage() {
       </section>
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="planner-heading">
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-teal-50 p-2 text-teal-700">
-            <Sparkles className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
-              Plan your outdoor activity
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Select your intended date and activity duration to calculate optimal windows.
-            </p>
-          </div>
+        <div>
+          <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
+            Plan your outdoor activity
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Select your intended date and activity duration to calculate optimal windows.
+          </p>
         </div>
 
         <form

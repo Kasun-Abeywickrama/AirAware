@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellRing, CheckCircle2, Info, SlidersHorizontal } from "lucide-react";
+import { Bell, CheckCircle2, Info, SlidersHorizontal } from "lucide-react";
 import { api } from "../../api/client";
 import { formatDateTime } from "../../utils/format";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
@@ -69,16 +69,11 @@ export function AlertPreferencesPage() {
         </div>
       ) : (
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="preference-form-heading">
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-teal-50 p-2.5 text-teal-700">
-              <BellRing className="size-5" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 id="preference-form-heading" className="text-lg font-semibold text-slate-950">
-                Your preference
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">Choose the PM2.5 value you want to save as your reference.</p>
-            </div>
+          <div>
+            <h2 id="preference-form-heading" className="text-lg font-semibold text-slate-950">
+              Your preference
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Choose the PM2.5 value you want to save as your reference.</p>
           </div>
 
           <form
