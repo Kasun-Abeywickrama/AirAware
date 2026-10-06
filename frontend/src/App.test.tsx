@@ -11,6 +11,7 @@ vi.mock("./api/client", () => ({
     latestForecasts: vi.fn(),
     forecastHistory: vi.fn(),
     activityPlan: vi.fn(),
+    alertPreference: vi.fn(),
   },
 }));
 
@@ -28,6 +29,13 @@ function renderApp() {
 describe("dashboard and routing", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedApi.alertPreference.mockResolvedValue({
+      status: "not_configured",
+      browser_id: "test-browser-id",
+      threshold_ug_m3: null,
+      enabled: false,
+      updated_at: null,
+    });
     window.history.pushState({}, "", "/");
   });
 
@@ -97,5 +105,52 @@ describe("dashboard and routing", () => {
     fireEvent.click(methodologyLink);
 
     expect(window.location.pathname).toBe("/methodology");
+  });
+
+  it("displays real-time threshold alert on dashboard when live PM2.5 exceeds user preference", async () => {
+    mockedApi.status.mockResolvedValue({
+      status: "available",
+      database: "connected",
+      pm25: { status: "available", last_completed_at: "2026-03-30T10:00:00Z" },
+      weather: { status: "available", last_completed_at: "2026-03-30T10:00:00Z" },
+      forecast: { status: "available", last_completed_at: "2026-03-30T10:00:00Z" },
+    });
+    mockedApi.currentConditions.mockResolvedValue({
+      status: "available",
+      pm25: {
+        value_ug_m3: 78.5,
+        unit: "µg/m³",
+        observed_at: "2026-03-30T10:00:00Z",
+        received_at: "2026-03-30T10:05:00Z",
+      },
+      source: { provider: "mock-provider", location_name: "Downtown Station" },
+    });
+    mockedApi.latestForecasts.mockResolvedValue({
+      status: "available",
+      model_version: "v1.0",
+      issued_at: "2026-03-30T10:00:00Z",
+      forecasts: [],
+    });
+    mockedApi.forecastHistory.mockResolvedValue({
+      status: "available",
+      hours: 72,
+      observations: [],
+      forecasts: [],
+    });
+    mockedApi.alertPreference.mockResolvedValue({
+      status: "configured",
+      browser_id: "test-browser-id",
+      threshold_ug_m3: 50,
+      enabled: true,
+      updated_at: "2026-03-30T09:00:00Z",
+    });
+
+    renderApp();
+
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByText("Air Quality Alert")).toBeTruthy();
+    expect(screen.getByText("Current PM2.5 exceeds your personal alert limit")).toBeTruthy();
+    expect(screen.getByText("+28.5 µg/m³ higher")).toBeTruthy();
+    expect(screen.getByText("Above your limit (50 µg/m³)")).toBeTruthy();
   });
 });

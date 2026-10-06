@@ -36,7 +36,7 @@ export function AqiBadge({
               />
               <span className={`relative size-2.5 rounded-full ${colors.dot}`} aria-hidden="true" />
             </span>
-            <span className={`text-sm font-bold ${colors.text}`}>{label}</span>
+            <span className={`ml-1 text-sm font-bold ${colors.text}`}>{label}</span>
           </div>
           <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-900">
             AQI {aqiScore}

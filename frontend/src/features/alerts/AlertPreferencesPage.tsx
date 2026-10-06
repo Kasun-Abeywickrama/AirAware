@@ -4,28 +4,20 @@ import { BellRing, CheckCircle2, Info, SlidersHorizontal } from "lucide-react";
 import { api } from "../../api/client";
 import { formatDateTime } from "../../utils/format";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
+import { getBrowserId } from "../../utils/browserId";
 
-const BROWSER_ID_KEY = "airaware-browser-id";
 const QUICK_THRESHOLDS: Array<{ value: number; label: string; desc: string }> = [
   { value: 35, label: "35 µg/m³", desc: "Moderate limit" },
   { value: 55, label: "55 µg/m³", desc: "Sensitive limit" },
   { value: 125, label: "125 µg/m³", desc: "Unhealthy limit" },
 ];
 
-function anonymousBrowserId() {
-  const savedId = window.localStorage.getItem(BROWSER_ID_KEY);
-  if (savedId) return savedId;
-  const id = crypto.randomUUID();
-  window.localStorage.setItem(BROWSER_ID_KEY, id);
-  return id;
-}
-
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Your preference could not be saved. Please try again.";
 }
 
 export function AlertPreferencesPage() {
-  const [browserId] = useState(anonymousBrowserId);
+  const [browserId] = useState(getBrowserId);
   const [threshold, setThreshold] = useState(55);
   const [enabled, setEnabled] = useState(true);
   const [initialised, setInitialised] = useState(false);
@@ -38,8 +30,13 @@ export function AlertPreferencesPage() {
 
   useEffect(() => {
     if (!preference.data || initialised) return;
-    if (preference.data.threshold_ug_m3 !== null) setThreshold(preference.data.threshold_ug_m3);
-    setEnabled(preference.data.enabled);
+    if (preference.data.status === "configured" && preference.data.threshold_ug_m3 !== null) {
+      setThreshold(preference.data.threshold_ug_m3);
+      setEnabled(preference.data.enabled);
+    } else {
+      // First-time configuration defaults to active so alerts work immediately
+      setEnabled(true);
+    }
     setInitialised(true);
   }, [initialised, preference.data]);
 
@@ -156,7 +153,7 @@ export function AlertPreferencesPage() {
                   <span className="pointer-events-none absolute left-1 top-1 size-5 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5" aria-hidden="true" />
                 </span>
               </label>
-              <div className="mt-auto pt-7">
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-7">
                 <button
                   type="submit"
                   disabled={!isValidThreshold || savePreference.isPending}
@@ -165,7 +162,7 @@ export function AlertPreferencesPage() {
                   {savePreference.isPending ? "Saving…" : "Save preference"}
                 </button>
                 {savePreference.isSuccess && (
-                  <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-teal-800">
+                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-800">
                     <CheckCircle2 className="size-4" aria-hidden="true" />
                     Saved{preference.data?.updated_at ? ` · ${formatDateTime(preference.data.updated_at)}` : ""}
                   </p>
@@ -185,8 +182,10 @@ export function AlertPreferencesPage() {
         <div className="flex gap-3">
           <Info className="mt-0.5 size-5 shrink-0 text-teal-700" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-slate-800">Your privacy</p>
-            <p className="mt-1">Your preference is saved privately for this browser.</p>
+            <p className="font-semibold text-slate-800">Private & Real-Time Alerts</p>
+            <p className="mt-1">
+              Your preference is saved privately for this browser. When live PM2.5 measurements or upcoming forecasts exceed this threshold, AirAware alerts you immediately on your dashboard.
+            </p>
           </div>
         </div>
       </aside>

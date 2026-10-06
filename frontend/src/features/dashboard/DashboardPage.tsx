@@ -2,8 +2,11 @@ import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, CloudSun } from "lucide-react";
 import { api } from "../../api/client";
+import { useAlertPreference } from "../../hooks/useAirData";
+import { getBrowserId } from "../../utils/browserId";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { AqiBadge } from "../../components/common/AqiBadge";
+import { ThresholdAlertBanner } from "../../components/common/ThresholdAlertBanner";
 import { ForecastCard } from "../forecast/ForecastCard";
 import { formatDateTime, formatPm25, formatRelativeAge } from "../../utils/format";
 import { EPA_AQI_SCALE, getAqiCategory } from "../../utils/aqi";
@@ -60,6 +63,9 @@ export function DashboardPage() {
   const conditions = useQuery({ queryKey: ["conditions"], queryFn: api.currentConditions, refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
   const forecasts = useQuery({ queryKey: ["forecasts"], queryFn: api.latestForecasts, refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
   const history = useQuery({ queryKey: ["history", 72], queryFn: () => api.forecastHistory(72), refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
+  const browserId = getBrowserId();
+  const alertPreference = useAlertPreference(browserId);
+
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
         <section className="mb-8 max-w-3xl">
@@ -77,6 +83,16 @@ export function DashboardPage() {
             />
           </div>
         )}
+
+        {conditions.data && (
+          <div className="mb-6">
+            <ThresholdAlertBanner
+              currentPm25={conditions.data.pm25.value_ug_m3}
+              preference={alertPreference.data}
+            />
+          </div>
+        )}
+
         <section aria-labelledby="current-heading">
           <div className="mb-4 flex items-center gap-2">
             <Activity className="size-5 text-teal-700" aria-hidden="true" />
@@ -101,6 +117,23 @@ export function DashboardPage() {
                       <p className="mt-3 text-5xl font-bold tracking-tight sm:text-6xl">
                         {formatPm25(conditions.data.pm25.value_ug_m3)} <span className="text-xl font-medium text-teal-100">µg/m³</span>
                       </p>
+
+                      {/* Threshold status badge only when alerts are actively enabled */}
+                      {alertPreference.data?.enabled && alertPreference.data.threshold_ug_m3 !== null ? (
+                        <div className="mt-3.5 inline-flex items-center gap-1.5">
+                          {conditions.data.pm25.value_ug_m3 > alertPreference.data.threshold_ug_m3 ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/25 px-2.5 py-1 text-xs font-semibold text-rose-100 ring-1 ring-rose-300/40">
+                              <span className="size-1.5 rounded-full bg-rose-400" />
+                              Above your limit ({alertPreference.data.threshold_ug_m3} µg/m³)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/25 px-2.5 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-300/40">
+                              <span className="size-1.5 rounded-full bg-emerald-400" />
+                              Below your limit ({alertPreference.data.threshold_ug_m3} µg/m³)
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <AqiBadge pm25={conditions.data.pm25.value_ug_m3} variant="hero" />
                   </div>
