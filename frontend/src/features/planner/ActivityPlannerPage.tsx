@@ -274,10 +274,10 @@ function PlannerExplanation() {
       >
         <span className="flex items-center gap-2">
           <Info className="size-4 text-teal-600" aria-hidden="true" />
-          <span>How are these times and values calculated?</span>
+          <span>Step-by-step: How these values are calculated</span>
         </span>
         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
-          <span>{isOpen ? "Hide guide" : "How it works"}</span>
+          <span>{isOpen ? "Hide calculation" : "View calculation steps"}</span>
           <ChevronDown
             className={`size-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
             aria-hidden="true"
@@ -286,52 +286,87 @@ function PlannerExplanation() {
       </button>
 
       {isOpen && (
-        <div className="mt-3.5 border-t border-slate-200/80 pt-3.5 text-xs text-slate-600">
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
-              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-teal-600" />
-                1. Best Window
-              </p>
-              <p className="mt-1 leading-relaxed text-slate-600">
-                Our AI model checks every continuous time block of your chosen duration across the day and sorts them from lowest PM2.5 to highest. The cleanest air is always <strong>Option 1</strong>.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
-              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-amber-500" />
-                2. AQI (Air Index)
-              </p>
-              <p className="mt-1 leading-relaxed text-slate-600">
-                Official EPA standard (0–500 scale). Values under 50 are Good (emerald), 51–100 Moderate (amber), and 101+ Sensitive (orange).
+        <div className="mt-3.5 border-t border-slate-200/80 pt-3.5 text-xs text-slate-700">
+          <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+            {/* Step 1 */}
+            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
+                  Step 1
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">Time Window</span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">Moving Duration Windows</p>
+              <p className="mt-1 text-slate-600 leading-relaxed text-[11px]">
+                The system scans every consecutive hourly block matching your chosen duration (e.g. 5:00 pm – 7:00 pm = 2 continuous hours).
               </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
-              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-slate-500" />
-                3. Forecast PM2.5
-              </p>
-              <p className="mt-1 leading-relaxed text-slate-600">
-                The expected average concentration of fine inhalable particles (µg/m³) during that window. Lower values mean cleaner, safer air.
+            {/* Step 2 */}
+            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
+                  Step 2
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">Forecast PM2.5</span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">Hourly Prediction Average</p>
+              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60">
+                Mean = (Hour₁ + Hour₂) / 2
+              </div>
+              <p className="mt-1 text-slate-500 text-[10.5px]">
+                Example: (29.9 + 32.2) / 2 = <strong>31.0 µg/m³</strong>
               </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
-              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-slate-400" />
-                4. Upper Range
+            {/* Step 3 */}
+            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 border border-teal-200/60">
+                  Step 3
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">Upper Range</span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">95% Confidence Upper Bound</p>
+              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60">
+                Upper = (Upper₁ + Upper₂) / 2
+              </div>
+              <p className="mt-1 text-slate-500 text-[10.5px]">
+                Example: (75.5 + 77.8) / 2 = <strong>76.6 µg/m³</strong>
               </p>
-              <p className="mt-1 leading-relaxed text-slate-600">
-                The 95% worst-case safety bound. Even if atmospheric conditions worsen unexpectedly, pollution is projected to stay below this ceiling.
+            </div>
+
+            {/* Step 4 */}
+            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs md:col-span-2 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 border border-amber-200/60">
+                  Step 4
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">US EPA 2024 Formula</span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">Piecewise Linear AQI Conversion</p>
+              <div className="mt-1.5 rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-800 border border-slate-200/60 overflow-x-auto">
+                AQI = [ (I_high - I_low) / (C_high - C_low) ] × (C - C_low) + I_low
+              </div>
+              <p className="mt-1 text-slate-500 text-[10.5px]">
+                Example: 31.0 µg/m³ in Moderate (9.1–35.4) → [49 / 26.3] × (31.0 - 9.1) + 51 = <strong>AQI 92 (Moderate)</strong>
+              </p>
+            </div>
+
+            {/* Step 5 */}
+            <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200/60">
+                  Step 5
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">Option 1 [BEST]</span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">Cleanest Air Ranking</p>
+              <p className="mt-1 text-slate-600 leading-relaxed text-[11px]">
+                All candidate windows across the day are ranked in ascending order by predicted PM2.5. Lowest pollution = <strong>Option 1 [BEST]</strong>.
               </p>
             </div>
           </div>
-
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            💡 <strong>Clock dial:</strong> The needle points to the start time, and the green arc marks your activity duration. Darker green bands indicate more optimal times.
-          </p>
         </div>
       )}
     </div>
