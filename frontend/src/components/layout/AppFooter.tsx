@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Activity, Bell, Calendar, Cpu, Database, FileText, LayoutDashboard, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Bell, Calendar, Cpu, Database, FileText, Layers, LayoutDashboard, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 
 export function AppFooter() {
   const currentYear = new Date().getFullYear();
@@ -7,8 +7,8 @@ export function AppFooter() {
   return (
     <footer className="mt-16 border-t border-slate-200 bg-white text-slate-600" aria-label="Site footer">
       <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+        {/* Main Footer Grid with balanced column widths */}
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1.15fr_1.15fr] lg:gap-10">
           {/* Column 1: Brand & Overview */}
           <div className="space-y-4">
             <Link
@@ -23,12 +23,12 @@ export function AppFooter() {
               />
             </Link>
             <p className="text-xs leading-relaxed text-slate-600">
-              Leakage-aware, multi-horizon PM2.5 forecasting and decision support framework for New Delhi, combining calibrated conformal uncertainty intervals and model-specific explainability.
+              Leakage-aware, multi-horizon PM2.5 forecasting and decision support framework for New Delhi, combining calibrated conformal intervals and model-specific explainability.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-              <MapPin className="size-3.5 text-teal-700" aria-hidden="true" />
-              <span>New Delhi, India · OpenAQ & NASA POWER</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
+              <MapPin className="size-3.5 text-teal-700 shrink-0" aria-hidden="true" />
+              <span className="whitespace-nowrap">New Delhi · OpenAQ & NASA POWER</span>
             </div>
           </div>
 
@@ -37,13 +37,13 @@ export function AppFooter() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
               Platform Features
             </h3>
-            <ul className="mt-4 space-y-2.5 text-xs">
+            <ul className="mt-4 space-y-3 text-xs">
               <li>
                 <Link
                   to="/"
                   className="inline-flex items-center gap-2 text-slate-600 transition hover:text-teal-800"
                 >
-                  <LayoutDashboard className="size-3.5 text-slate-400" aria-hidden="true" />
+                  <LayoutDashboard className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Live Dashboard</span>
                 </Link>
               </li>
@@ -52,7 +52,7 @@ export function AppFooter() {
                   to="/forecast"
                   className="inline-flex items-center gap-2 text-slate-600 transition hover:text-teal-800"
                 >
-                  <Activity className="size-3.5 text-slate-400" aria-hidden="true" />
+                  <Activity className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Forecast & History</span>
                 </Link>
               </li>
@@ -61,7 +61,7 @@ export function AppFooter() {
                   to="/planner"
                   className="inline-flex items-center gap-2 text-slate-600 transition hover:text-teal-800"
                 >
-                  <Calendar className="size-3.5 text-slate-400" aria-hidden="true" />
+                  <Calendar className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Activity Planner</span>
                 </Link>
               </li>
@@ -70,7 +70,7 @@ export function AppFooter() {
                   to="/alerts"
                   className="inline-flex items-center gap-2 text-slate-600 transition hover:text-teal-800"
                 >
-                  <Bell className="size-3.5 text-slate-400" aria-hidden="true" />
+                  <Bell className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Alert Preferences</span>
                 </Link>
               </li>
@@ -79,7 +79,7 @@ export function AppFooter() {
                   to="/methodology"
                   className="inline-flex items-center gap-2 text-slate-600 transition hover:text-teal-800"
                 >
-                  <FileText className="size-3.5 text-slate-400" aria-hidden="true" />
+                  <FileText className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Research Methodology</span>
                 </Link>
               </li>
@@ -89,24 +89,28 @@ export function AppFooter() {
           {/* Column 3: Standards & Methodology */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Standards & Methodology
+              Standards & Methods
             </h3>
-            <ul className="mt-4 space-y-2.5 text-xs text-slate-600">
-              <li className="flex items-start gap-2">
-                <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>US EPA AQI Standard (2024 revised PM2.5 breakpoints)</span>
+            <ul className="mt-4 space-y-3 text-xs text-slate-600">
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>US EPA 2024 PM2.5 Breakpoints</span>
               </li>
-              <li className="flex items-start gap-2">
-                <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>WHO Air Quality Guidelines (15 µg/m³ 24h limit)</span>
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>WHO 2021 Air Quality Target</span>
               </li>
-              <li className="flex items-start gap-2">
-                <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Split-Conformal Prediction (Calibrated intervals)</span>
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Split-Conformal Prediction (90% CI)</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Sparkles className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Explainable AI: TreeSHAP & Integrated Gradients</span>
+              <li className="flex items-center gap-2">
+                <Sparkles className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Explainable AI: TreeSHAP (Trees)</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Sparkles className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Integrated Gradients (Neural)</span>
               </li>
             </ul>
           </div>
@@ -114,24 +118,28 @@ export function AppFooter() {
           {/* Column 4: Research & Architecture */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Research & Architecture
+              Research & System
             </h3>
-            <ul className="mt-4 space-y-2.5 text-xs text-slate-600">
-              <li className="flex items-start gap-2">
-                <Cpu className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Models: GRU (1h), XGBoost + GRU (6h), Multi-Horizon</span>
+            <ul className="mt-4 space-y-3 text-xs text-slate-600">
+              <li className="flex items-center gap-2">
+                <Cpu className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Models: GRU & XGBoost+GRU</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Cpu className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Horizons: 1-Hour, 6-Hour & 24-Hour Lookahead</span>
+              <li className="flex items-center gap-2">
+                <Layers className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Horizons: 1h, 6h & 24h Lookahead</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Database className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Stack: React, FastAPI, PostgreSQL & Scheduled Worker</span>
+              <li className="flex items-center gap-2">
+                <Database className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Data: OpenAQ & NASA POWER</span>
               </li>
-              <li className="flex items-start gap-2">
-                <FileText className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>BSc (Hons) Computer Science Final Year Research</span>
+              <li className="flex items-center gap-2">
+                <Database className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>Stack: React, FastAPI & PostgreSQL</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <FileText className="size-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+                <span>BSc (Hons) Final Year Research</span>
               </li>
             </ul>
           </div>

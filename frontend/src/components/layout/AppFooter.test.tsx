@@ -13,7 +13,7 @@ describe("AppFooter", () => {
 
     // Brand and location
     expect(screen.getByAltText("AirAware")).toBeTruthy();
-    expect(screen.getByText(/New Delhi, India · OpenAQ & NASA POWER/)).toBeTruthy();
+    expect(screen.getByText(/New Delhi · OpenAQ & NASA POWER/)).toBeTruthy();
 
     // Feature navigation links
     expect(screen.getByRole("link", { name: /Live Dashboard/i })).toBeTruthy();
@@ -23,11 +23,11 @@ describe("AppFooter", () => {
     expect(screen.getByRole("link", { name: /Research Methodology/i })).toBeTruthy();
 
     // Standards and specs
-    expect(screen.getByText(/US EPA AQI Standard/i)).toBeTruthy();
-    expect(screen.getByText(/WHO Air Quality Guidelines/i)).toBeTruthy();
+    expect(screen.getByText(/US EPA 2024 PM2.5 Breakpoints/i)).toBeTruthy();
+    expect(screen.getByText(/WHO 2021 Air Quality Target/i)).toBeTruthy();
     expect(screen.getByText(/Split-Conformal Prediction/i)).toBeTruthy();
-    expect(screen.getByText(/TreeSHAP & Integrated Gradients/i)).toBeTruthy();
-    expect(screen.getByText(/GRU \(1h\), XGBoost \+ GRU \(6h\)/i)).toBeTruthy();
+    expect(screen.getByText(/TreeSHAP/i)).toBeTruthy();
+    expect(screen.getByText(/Models: GRU & XGBoost\+GRU/i)).toBeTruthy();
 
     // Legal and research author attribution
     expect(screen.getByText(/A\.H\.K\. Thiwanka/i)).toBeTruthy();
