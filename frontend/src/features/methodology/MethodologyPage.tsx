@@ -84,39 +84,39 @@ export function MethodologyPage() {
   const rawStep = (deltaI / deltaC) * deltaCurrent + activeBand.iLow;
 
   return (
-    <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
+    <main id="main-content" className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-12">
       {/* Header */}
       <section className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Standards & Methodology</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700 sm:text-sm">Standards & Methodology</p>
+        <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
           US EPA Air Quality Index (AQI) Calculation & Standards
         </h1>
-        <p className="mt-3 text-base leading-7 text-slate-600">
+        <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3 sm:text-base sm:leading-7">
           How AirAware calculates the official Air Quality Index (AQI) from ambient PM2.5 concentrations using the
           latest 2024 U.S. Environmental Protection Agency (EPA) NAAQS breakpoints and official linear interpolation.
         </p>
       </section>
 
       {/* Interactive Calculator Section */}
-      <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="calculator-heading">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-teal-50 p-2.5 text-teal-700">
-            <Calculator className="size-6" aria-hidden="true" />
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-10 sm:p-8" aria-labelledby="calculator-heading">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="rounded-xl bg-teal-50 p-2 text-teal-700 sm:p-2.5">
+            <Calculator className="size-5 sm:size-6" aria-hidden="true" />
           </div>
           <div>
-            <h2 id="calculator-heading" className="text-xl font-bold text-slate-950">
+            <h2 id="calculator-heading" className="text-lg font-bold text-slate-950 sm:text-xl">
               PM2.5 to AQI Calculator
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">
               Input any PM2.5 concentration (µg/m³) to inspect the live linear interpolation calculation.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-5 sm:mt-6 grid gap-5 sm:gap-6 lg:grid-cols-2">
           {/* Input & Result display */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5">
-            <label htmlFor="calc-pm25-input" className="block text-sm font-semibold text-slate-800">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <label htmlFor="calc-pm25-input" className="block text-xs font-semibold text-slate-800 sm:text-sm">
               Enter PM2.5 concentration:
             </label>
             <div className="mt-2 flex items-center gap-3">
@@ -128,9 +128,9 @@ export function MethodologyPage() {
                 step="0.1"
                 value={calculatorInput}
                 onChange={(e) => setCalculatorInput(e.target.valueAsNumber || 0)}
-                className="w-40 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xl font-bold text-slate-950 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                className="w-36 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-lg font-bold text-slate-950 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-100 sm:w-40 sm:px-4 sm:py-2.5 sm:text-xl"
               />
-              <span className="text-base font-semibold text-slate-600">µg/m³</span>
+              <span className="text-sm font-semibold text-slate-600 sm:text-base">µg/m³</span>
             </div>
 
             {/* Quick value presets */}
@@ -222,16 +222,16 @@ export function MethodologyPage() {
       </section>
 
       {/* 2024 Breakpoints Table Section */}
-      <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="table-heading">
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-12 sm:p-8" aria-labelledby="table-heading">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="size-5 text-teal-700" aria-hidden="true" />
-              <h2 id="table-heading" className="text-xl font-bold text-slate-950">
+              <ShieldCheck className="size-4.5 text-teal-700 sm:size-5" aria-hidden="true" />
+              <h2 id="table-heading" className="text-lg font-bold text-slate-950 sm:text-xl">
                 Official 2024 US EPA PM2.5 AQI Breakpoints Table
               </h2>
             </div>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">
               National Ambient Air Quality Standards (NAAQS) revised under 89 FR 16202 (Effective May 6, 2024).
             </p>
           </div>

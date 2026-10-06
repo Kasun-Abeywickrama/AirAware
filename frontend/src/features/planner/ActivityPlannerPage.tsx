@@ -221,7 +221,7 @@ function ClockFace({ window, rankIndex }: { window: ActivityPlanWindow; rankInde
 
 function ClockCircles({ plan }: { plan: ActivityPlan }) {
   return (
-    <ol className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+    <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {plan.windows.map((window, index) => {
         const aqi = getAqiCategory(window.mean_predicted_value_ug_m3);
         const aqiScore = calculateAqi(window.mean_predicted_value_ug_m3);
@@ -494,36 +494,36 @@ export function ActivityPlannerPage() {
   });
 
   return (
-    <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+    <main id="main-content" className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-10">
       <section className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Outdoor planning</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Activity Planner</h1>
-        <p className="mt-3 text-base leading-7 text-slate-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700 sm:text-sm">Outdoor planning</p>
+        <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">Activity Planner</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3 sm:text-base sm:leading-7">
           Find the cleanest air windows for outdoor exercise, errands, and commuting in New Delhi based on hourly PM2.5 forecasts.
         </p>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="planner-heading">
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="planner-heading">
         <div>
-          <h2 id="planner-heading" className="text-lg font-semibold text-slate-950">
+          <h2 id="planner-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
             Plan your outdoor activity
           </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
             Select your intended date and activity duration to calculate optimal windows.
           </p>
         </div>
 
         <form
-          className="mt-6 grid gap-4 md:grid-cols-[1.2fr_1fr_auto] md:items-end"
+          className="mt-5 grid gap-3.5 sm:mt-6 sm:gap-4 md:grid-cols-[1.2fr_1fr_auto] md:items-end"
           onSubmit={(event) => {
             event.preventDefault();
             refetch();
           }}
         >
-          <div className="grid gap-2 text-sm font-medium text-slate-800">
+          <div className="grid gap-1.5 text-xs font-medium text-slate-800 sm:gap-2 sm:text-sm">
             <div className="flex items-center justify-between">
               <label htmlFor="planner-date" className="flex items-center gap-1.5 font-medium text-slate-800">
-                <CalendarDays className="size-4 text-teal-700" aria-hidden="true" />
+                <CalendarDays className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
                 Date
               </label>
               <div className="inline-flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="Quick date selector">
@@ -551,7 +551,7 @@ export function ActivityPlannerPage() {
             </div>
             <input
               id="planner-date"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700 sm:py-2"
               type="date"
               value={date}
               min={todayDate}
@@ -561,15 +561,15 @@ export function ActivityPlannerPage() {
             />
           </div>
 
-          <div className="grid gap-2 text-sm font-medium text-slate-800">
+          <div className="grid gap-1.5 text-xs font-medium text-slate-800 sm:gap-2 sm:text-sm">
             <label htmlFor="planner-duration" className="flex items-center gap-1.5 font-medium text-slate-800">
-              <Clock3 className="size-4 text-teal-700" aria-hidden="true" />
+              <Clock3 className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
               Duration
             </label>
             <div className="relative">
               <select
                 id="planner-duration"
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-3.5 pr-10 text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm text-slate-900 shadow-sm focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700 sm:py-2 sm:pl-3.5 sm:pr-10"
                 value={duration}
                 onChange={(event) => setDuration(Number(event.target.value))}
               >
@@ -579,12 +579,12 @@ export function ActivityPlannerPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-500 sm:right-3.5 sm:size-4" aria-hidden="true" />
             </div>
           </div>
 
           <button
-            className="rounded-lg bg-teal-700 px-5 py-2 font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-lg bg-teal-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400 sm:px-5 sm:py-2 sm:text-sm"
             type="submit"
             disabled={isPending || isFetching}
           >
