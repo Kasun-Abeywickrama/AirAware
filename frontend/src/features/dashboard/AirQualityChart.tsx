@@ -42,8 +42,8 @@ export function AirQualityChart({ history, expanded = false }: { history: Foreca
               labelFormatter={(value) => formatDateTime(String(value))}
               formatter={(value: number, name) => [`${formatPm25(value)} µg/m³`, name === "observation" ? "Observed" : name === "forecast" ? "Forecast" : name]}
             />
-            <Area type="monotone" dataKey="upper" stroke="none" fill="#99f6e4" fillOpacity={0.55} name="Upper range" />
-            <Area type="monotone" dataKey="lower" stroke="none" fill="#ffffff" fillOpacity={1} name="Lower range" />
+            <Area connectNulls type="monotone" dataKey="upper" stroke="none" fill="#99f6e4" fillOpacity={0.55} name="Upper range" />
+            <Area connectNulls type="monotone" dataKey="lower" stroke="none" fill="#ffffff" fillOpacity={1} name="Lower range" />
             <Line type="monotone" dataKey="observation" stroke="#0f766e" strokeWidth={2.5} dot={false} name="observation" connectNulls />
             <Line type="monotone" dataKey="forecast" stroke="#2563eb" strokeWidth={2.5} strokeDasharray="6 5" dot={{ r: 3 }} name="forecast" connectNulls />
           </ComposedChart>
