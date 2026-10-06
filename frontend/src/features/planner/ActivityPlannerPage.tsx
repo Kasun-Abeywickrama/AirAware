@@ -313,12 +313,23 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">Forecast PM2.5</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">Hourly Prediction Average</p>
-              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs">
-                Mean = (Hour₁ + Hour₂) / 2
+              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-2xs space-y-2">
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-800">
+                  <span>Mean =</span>
+                  <span className="inline-flex flex-col items-center">
+                    <span className="border-b border-slate-400 px-1 pb-0.5">Hour₁ + Hour₂</span>
+                    <span className="pt-0.5">2</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-600 border-t border-slate-100 pt-1.5">
+                  <span>=</span>
+                  <span className="inline-flex flex-col items-center">
+                    <span className="border-b border-slate-400 px-1 pb-0.5">29.9 + 32.2</span>
+                    <span className="pt-0.5">2</span>
+                  </span>
+                  <span>= <strong className="text-slate-950 font-bold">31.0 µg/m³</strong></span>
+                </div>
               </div>
-              <p className="mt-1 text-slate-500 text-[10.5px]">
-                Example: (29.9 + 32.2) / 2 = <strong>31.0 µg/m³</strong>
-              </p>
             </div>
 
             {/* Step 3 */}
@@ -330,12 +341,23 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">Upper Range</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">95% Confidence Upper Bound</p>
-              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs">
-                Upper = (Upper₁ + Upper₂) / 2
+              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-2xs space-y-2">
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-800">
+                  <span>Upper =</span>
+                  <span className="inline-flex flex-col items-center">
+                    <span className="border-b border-slate-400 px-1 pb-0.5">Upper₁ + Upper₂</span>
+                    <span className="pt-0.5">2</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-600 border-t border-slate-100 pt-1.5">
+                  <span>=</span>
+                  <span className="inline-flex flex-col items-center">
+                    <span className="border-b border-slate-400 px-1 pb-0.5">75.5 + 77.8</span>
+                    <span className="pt-0.5">2</span>
+                  </span>
+                  <span>= <strong className="text-slate-950 font-bold">76.6 µg/m³</strong></span>
+                </div>
               </div>
-              <p className="mt-1 text-slate-500 text-[10.5px]">
-                Example: (75.5 + 77.8) / 2 = <strong>76.6 µg/m³</strong>
-              </p>
             </div>
 
             {/* Step 4 */}
@@ -347,12 +369,39 @@ function PlannerExplanation() {
                 <span className="text-[11px] font-medium text-slate-500">US EPA 2024 Formula</span>
               </div>
               <p className="mt-2 font-semibold text-slate-900">Piecewise Linear AQI Conversion</p>
-              <div className="mt-1.5 rounded-md bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-800 border border-slate-200/80 shadow-2xs overflow-x-auto">
-                AQI = [ (I_high - I_low) / (C_high - C_low) ] × (C - C_low) + I_low
+              <div className="mt-2 rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs space-y-2.5">
+                {/* Mathematical Equation with Fraction */}
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-800 overflow-x-auto pb-0.5">
+                  <span className="font-semibold text-slate-900">AQI =</span>
+                  <span className="inline-flex flex-col items-center">
+                    <span className="border-b border-slate-400 px-1.5 pb-0.5">I<sub>high</sub> − I<sub>low</sub></span>
+                    <span className="pt-0.5">C<sub>high</sub> − C<sub>low</sub></span>
+                  </span>
+                  <span>× (C − C<sub>low</sub>) + I<sub>low</sub></span>
+                </div>
+
+                {/* Substituted Example Steps */}
+                <div className="border-t border-slate-100 pt-2 space-y-2 font-mono text-xs text-slate-600 overflow-x-auto">
+                  <div className="flex items-center gap-2">
+                    <span>=</span>
+                    <span className="inline-flex flex-col items-center">
+                      <span className="border-b border-slate-400 px-1.5 pb-0.5">100 − 51</span>
+                      <span className="pt-0.5">35.4 − 9.1</span>
+                    </span>
+                    <span>× (31.0 − 9.1) + 51</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                    <span>=</span>
+                    <span className="inline-flex flex-col items-center">
+                      <span className="border-b border-slate-400 px-1.5 pb-0.5">49</span>
+                      <span className="pt-0.5">26.3</span>
+                    </span>
+                    <span>× 21.9 + 51</span>
+                    <span>= 40.8 + 51</span>
+                    <span>= <strong className="rounded bg-amber-50 px-2 py-0.5 font-bold text-amber-900 border border-amber-200/80">AQI 92 (Moderate)</strong></span>
+                  </div>
+                </div>
               </div>
-              <p className="mt-1 text-slate-500 text-[10.5px]">
-                Example: 31.0 µg/m³ in Moderate (9.1–35.4) → [49 / 26.3] × (31.0 - 9.1) + 51 = <strong>AQI 92 (Moderate)</strong>
-              </p>
             </div>
 
             {/* Step 5 */}
