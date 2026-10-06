@@ -13,7 +13,7 @@ describe("AppFooter", () => {
 
     // Brand and location
     expect(screen.getByAltText("AirAware")).toBeTruthy();
-    expect(screen.getByText(/New Delhi, India/)).toBeTruthy();
+    expect(screen.getByText(/New Delhi, India · OpenAQ & NASA POWER/)).toBeTruthy();
 
     // Feature navigation links
     expect(screen.getByRole("link", { name: /Live Dashboard/i })).toBeTruthy();
@@ -25,9 +25,11 @@ describe("AppFooter", () => {
     // Standards and specs
     expect(screen.getByText(/US EPA AQI Standard/i)).toBeTruthy();
     expect(screen.getByText(/WHO Air Quality Guidelines/i)).toBeTruthy();
-    expect(screen.getByText(/LightGBM, XGBoost & CatBoost/i)).toBeTruthy();
+    expect(screen.getByText(/Split-Conformal Prediction/i)).toBeTruthy();
+    expect(screen.getByText(/TreeSHAP & Integrated Gradients/i)).toBeTruthy();
+    expect(screen.getByText(/GRU \(1h\), XGBoost \+ GRU \(6h\)/i)).toBeTruthy();
 
-    // Legal and disclaimer
-    expect(screen.getByText(/AirAware\. Developed for air quality intelligence/i)).toBeTruthy();
+    // Legal and research author attribution
+    expect(screen.getByText(/A\.H\.K\. Thiwanka/i)).toBeTruthy();
   });
 });

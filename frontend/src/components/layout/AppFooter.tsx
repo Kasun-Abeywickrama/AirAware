@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Activity, Bell, Calendar, Cpu, Database, ExternalLink, FileText, LayoutDashboard, MapPin, ShieldCheck } from "lucide-react";
+import { Activity, Bell, Calendar, Cpu, Database, FileText, LayoutDashboard, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 
 export function AppFooter() {
   const currentYear = new Date().getFullYear();
@@ -23,12 +23,12 @@ export function AppFooter() {
               />
             </Link>
             <p className="text-xs leading-relaxed text-slate-600">
-              Actionable air quality forecasting and outdoor activity intelligence for New Delhi, powered by gradient boosting ensembles and conformal uncertainty quantification.
+              Leakage-aware, multi-horizon PM2.5 forecasting and decision support framework for New Delhi, combining calibrated conformal uncertainty intervals and model-specific explainability.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
               <MapPin className="size-3.5 text-teal-700" aria-hidden="true" />
-              <span>New Delhi, India · CPCB Network</span>
+              <span>New Delhi, India · OpenAQ & NASA POWER</span>
             </div>
           </div>
 
@@ -86,15 +86,15 @@ export function AppFooter() {
             </ul>
           </div>
 
-          {/* Column 3: Standards & Guidelines */}
+          {/* Column 3: Standards & Methodology */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Standards & Indices
+              Standards & Methodology
             </h3>
             <ul className="mt-4 space-y-2.5 text-xs text-slate-600">
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>US EPA AQI Standard (2024 updated PM2.5 breakpoints)</span>
+                <span>US EPA AQI Standard (2024 revised PM2.5 breakpoints)</span>
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
@@ -102,36 +102,36 @@ export function AppFooter() {
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Conformal Prediction (95% uncertainty intervals)</span>
+                <span>Split-Conformal Prediction (Calibrated intervals)</span>
               </li>
               <li className="flex items-start gap-2">
-                <Database className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Continuous Ambient Air Quality Monitoring (CAAQMS)</span>
+                <Sparkles className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
+                <span>Explainable AI: TreeSHAP & Integrated Gradients</span>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: System Architecture */}
+          {/* Column 4: Research & Architecture */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              System Architecture
+              Research & Architecture
             </h3>
             <ul className="mt-4 space-y-2.5 text-xs text-slate-600">
               <li className="flex items-start gap-2">
                 <Cpu className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Model Ensemble: LightGBM, XGBoost & CatBoost</span>
+                <span>Models: GRU (1h), XGBoost + GRU (6h), Multi-Horizon</span>
               </li>
               <li className="flex items-start gap-2">
                 <Cpu className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Inference Horizon: 24-Hour Lookahead Window</span>
+                <span>Horizons: 1-Hour, 6-Hour & 24-Hour Lookahead</span>
               </li>
               <li className="flex items-start gap-2">
-                <Cpu className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Update Cadence: Automated Hourly Pipeline</span>
+                <Database className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
+                <span>Stack: React, FastAPI, PostgreSQL & Scheduled Worker</span>
               </li>
               <li className="flex items-start gap-2">
                 <FileText className="size-3.5 shrink-0 text-teal-700 mt-0.5" aria-hidden="true" />
-                <span>Final Year Research Project</span>
+                <span>BSc (Hons) Computer Science Final Year Research</span>
               </li>
             </ul>
           </div>
@@ -140,10 +140,10 @@ export function AppFooter() {
         {/* Bottom Bar: Copyright & Disclaimer */}
         <div className="mt-12 border-t border-slate-100 pt-8 flex flex-col gap-4 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
           <p>
-            © {currentYear} AirAware. Developed for air quality intelligence & research.
+            © {currentYear} AirAware. Developed by A.H.K. Thiwanka · Final Year Research Project.
           </p>
           <p className="max-w-xl text-[11px] leading-relaxed text-slate-400">
-            Disclaimer: Predictions and air quality recommendations are indicative and computed using statistical machine learning models. For sensitive health advisories, please refer to official healthcare guidelines.
+            Disclaimer: Forecasts and decision-support indicators are statistical predictions generated by machine learning models. For sensitive health precautions, please refer to official public health advisories.
           </p>
         </div>
       </div>
