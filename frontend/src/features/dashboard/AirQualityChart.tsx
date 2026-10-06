@@ -91,10 +91,34 @@ export function AirQualityChart({
       </div>
       <div className={`mt-4 sm:mt-6 ${expanded ? "h-80 sm:h-[28rem]" : "h-64 sm:h-72"}`} role="img" aria-label="PM2.5 observations and forecast chart">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 16, right: 8, left: -16, bottom: 0 }}>
+          <ComposedChart data={data} margin={{ top: 16, right: 8, left: isDesktop ? -16 : -8, bottom: isDesktop ? 0 : 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
             <XAxis dataKey="timestamp" tickFormatter={formatChartAxisDate} minTickGap={32} tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#475569", fontSize: 11 }} tickFormatter={(value) => `${value} µg/m³`} axisLine={false} tickLine={false} width={75} />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              width={isDesktop ? 75 : 44}
+              tick={(props: { x: number; y: number; payload: { value: number } }) => {
+                const { x, y, payload } = props;
+                if (isDesktop) {
+                  return (
+                    <text x={x} y={y} dy={4} textAnchor="end" fill="#475569" fontSize={11}>
+                      {payload.value} µg/m³
+                    </text>
+                  );
+                }
+                return (
+                  <text x={x} y={y} textAnchor="end" fill="#475569">
+                    <tspan x={x} dy={-3} fontSize={10} fontWeight="600">
+                      {payload.value}
+                    </tspan>
+                    <tspan x={x} dy={11} fontSize={8.5} fill="#64748b">
+                      µg/m³
+                    </tspan>
+                  </text>
+                );
+              }}
+            />
             <Tooltip
               labelFormatter={(value) => formatDateTime(String(value))}
               formatter={(value: number, name) => [`${formatPm25(value)} µg/m³`, name === "observation" ? "Observed" : name === "forecast" ? "Forecast" : name]}

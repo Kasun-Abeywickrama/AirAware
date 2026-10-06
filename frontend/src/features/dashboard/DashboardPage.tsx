@@ -151,15 +151,17 @@ export function DashboardPage() {
                         </div>
                       ) : null}
                     </div>
-                    <AqiBadge pm25={conditions.data.pm25.value_ug_m3} variant="hero" />
+                    <div className="hidden sm:block">
+                      <AqiBadge pm25={conditions.data.pm25.value_ug_m3} variant="hero" />
+                    </div>
                   </div>
-                  <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                  <div className="mt-6 flex flex-col gap-2 pt-4 border-t border-white/10 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-teal-100 sm:text-sm">
                       Observed {formatDateTime(conditions.data.pm25.observed_at)} · {formatRelativeAge(conditions.data.pm25.received_at)}
                     </p>
-                    <div className="rounded-xl bg-white/10 p-3 text-xs text-teal-50 sm:p-4 sm:text-sm">
-                      <p className="font-semibold">{conditions.data.source.location_name}</p>
-                      <p className="mt-1 capitalize">Source: {conditions.data.source.provider}</p>
+                    <div className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-teal-100 sm:text-sm">
+                      <span className="size-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                      <span>{conditions.data.source.location_name}</span>
                     </div>
                   </div>
                 </article>

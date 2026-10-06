@@ -80,7 +80,9 @@ export function AppHeader({
 
         {/* Mobile / Small Tablet Bar (< 768px / md:) */}
         <div className="flex items-center gap-2.5 md:hidden">
-          <StatusBadge status={serviceState} />
+          <span className="hidden sm:inline-flex">
+            <StatusBadge status={serviceState} />
+          </span>
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}

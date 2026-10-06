@@ -73,23 +73,12 @@ export function ThresholdAlertBanner({
               </h3>
             </div>
 
-            {/* 2. Structured Metric Chips */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center rounded-md bg-white/90 px-2.5 py-1 font-medium text-slate-700 ring-1 ring-slate-200/80 shadow-2xs">
-                Live PM2.5: <strong className="ml-1 font-bold text-slate-950">{formatPm25(currentPm25)} µg/m³</strong>
-              </span>
-
-              <span className="inline-flex items-center rounded-md bg-rose-100/70 px-2.5 py-1 font-medium text-rose-900 ring-1 ring-rose-200/80 shadow-2xs">
-                <span className="font-bold text-rose-700">+{excess} µg/m³ higher</span>
-                <span className="ml-1 text-rose-800">than your {threshold} µg/m³ limit</span>
-              </span>
-
-              <span
-                className={`inline-flex items-center rounded-md px-2.5 py-1 font-semibold ring-1 shadow-2xs ${aqiCategory.colors.badge} ${aqiCategory.colors.text} ring-black/5`}
-              >
-                {aqiCategory.label} (AQI {aqiScore})
-              </span>
-            </div>
+            {/* 2. Natural cohesive sentence without extraneous AQI pill */}
+            <p className="text-xs text-slate-700 sm:text-[13px] leading-relaxed">
+              Live PM2.5 is <strong className="font-semibold text-slate-950">{formatPm25(currentPm25)} µg/m³</strong>, which is{" "}
+              <strong className="font-semibold text-rose-700">+{excess} µg/m³ higher</strong> than your{" "}
+              <span className="font-medium text-slate-900">{threshold} µg/m³ limit</span>.
+            </p>
 
             {/* 3. Distinct Health Guidance line */}
             <p className="text-xs text-slate-600 sm:text-[13px]">
