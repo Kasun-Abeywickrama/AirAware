@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BellRing, CheckCircle2, Info, SlidersHorizontal } from "lucide-react";
+import { Bell, BellRing, CheckCircle2, Info, SlidersHorizontal } from "lucide-react";
 import { api } from "../../api/client";
 import { formatDateTime } from "../../utils/format";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { getBrowserId } from "../../utils/browserId";
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  sendTestNotification,
+} from "../../utils/notifications";
 
 const QUICK_THRESHOLDS: Array<{ value: number; label: string; desc: string }> = [
   { value: 35, label: "35 µg/m³", desc: "Moderate limit" },
@@ -21,6 +26,8 @@ export function AlertPreferencesPage() {
   const [threshold, setThreshold] = useState(55);
   const [enabled, setEnabled] = useState(true);
   const [initialised, setInitialised] = useState(false);
+  const [permission, setPermission] = useState(getNotificationPermission);
+  const [sentTest, setSentTest] = useState(false);
   const queryClient = useQueryClient();
   const preference = useQuery({ queryKey: ["alert-preference", browserId], queryFn: () => api.alertPreference(browserId), staleTime: 5 * 60_000 });
   const savePreference = useMutation({
@@ -177,6 +184,71 @@ export function AlertPreferencesPage() {
           </form>
         </section>
       )}
+
+      {/* Desktop / Browser Notifications Card */}
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="desktop-alerts-heading">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-teal-50 p-2.5 text-teal-700">
+              <Bell className="size-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 id="desktop-alerts-heading" className="text-lg font-semibold text-slate-950">
+                Desktop Notifications
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Receive browser alerts when PM2.5 crosses your threshold, even while browsing other tabs.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3 self-start sm:self-center">
+            {permission === "granted" ? (
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">
+                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                  Notifications Active
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sendTestNotification();
+                    setSentTest(true);
+                    setTimeout(() => setSentTest(false), 2500);
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-2xs transition ${
+                    sentTest
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-teal-600 hover:text-teal-800"
+                  }`}
+                >
+                  {sentTest ? "✓ Alert sent!" : "Test alert"}
+                </button>
+              </div>
+            ) : permission === "denied" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                Blocked in browser settings
+              </span>
+            ) : permission === "unsupported" ? (
+              <span className="text-xs text-slate-500">Not supported by this browser</span>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await requestNotificationPermission();
+                  setPermission(res);
+                  if (res === "granted") {
+                    sendTestNotification();
+                  }
+                }}
+                className="rounded-lg bg-teal-700 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-teal-800"
+              >
+                Enable browser alerts
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
       <aside className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 p-5 text-sm leading-6 text-slate-700">
         <div className="flex gap-3">

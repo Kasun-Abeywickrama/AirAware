@@ -1,9 +1,10 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, CloudSun } from "lucide-react";
 import { api } from "../../api/client";
 import { useAlertPreference } from "../../hooks/useAirData";
 import { getBrowserId } from "../../utils/browserId";
+import { sendThresholdNotification } from "../../utils/notifications";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { AqiBadge } from "../../components/common/AqiBadge";
 import { ThresholdAlertBanner } from "../../components/common/ThresholdAlertBanner";
@@ -65,6 +66,21 @@ export function DashboardPage() {
   const history = useQuery({ queryKey: ["history", 72], queryFn: () => api.forecastHistory(72), refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
   const browserId = getBrowserId();
   const alertPreference = useAlertPreference(browserId);
+
+  // Dispatch native browser notification if threshold is exceeded and notifications are allowed
+  useEffect(() => {
+    if (
+      conditions.data &&
+      alertPreference.data?.enabled &&
+      alertPreference.data.threshold_ug_m3 !== null
+    ) {
+      sendThresholdNotification({
+        currentPm25: conditions.data.pm25.value_ug_m3,
+        threshold: alertPreference.data.threshold_ug_m3,
+        locationName: conditions.data.source.location_name,
+      });
+    }
+  }, [conditions.data, alertPreference.data]);
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
