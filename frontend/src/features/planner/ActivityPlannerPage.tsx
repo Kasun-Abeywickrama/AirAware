@@ -265,12 +265,12 @@ function PlannerExplanation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section className="mt-8 border-t border-slate-200 pt-6" aria-label="Calculation methodology">
+    <section className="mt-8" aria-label="Calculation methodology">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Info className="size-4 text-teal-700" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-slate-900">
-            Step-by-step: How these values are calculated
+            How these values are calculated
           </h3>
         </div>
         <button
