@@ -116,7 +116,7 @@ export function DashboardPage() {
           </div>
         )}
 
-        <section aria-labelledby="current-heading">
+        <section id="tour-current-pm25" aria-labelledby="current-heading">
           <div className="mb-4 flex items-center gap-2">
             <Activity className="size-5 text-teal-700" aria-hidden="true" />
             <h2 id="current-heading" className="text-xl font-semibold">
@@ -183,12 +183,14 @@ export function DashboardPage() {
                     </div>
                   </div>
                 </article>
-                <AqiScaleLegend currentPm25={conditions.data.pm25.value_ug_m3} />
+                <div id="tour-aqi-scale">
+                  <AqiScaleLegend currentPm25={conditions.data.pm25.value_ug_m3} />
+                </div>
               </>
             )
           )}
         </section>
-        <section className="mt-10" aria-labelledby="forecast-heading">
+        <section id="tour-forecast-cards" className="mt-10" aria-labelledby="forecast-heading">
           <div className="mb-4 flex items-center gap-2">
             <CloudSun className="size-5 text-teal-700" aria-hidden="true" />
             <h2 id="forecast-heading" className="text-xl font-semibold">
@@ -221,7 +223,7 @@ export function DashboardPage() {
           )}
         </section>
 
-        <section className="mt-8 sm:mt-10">
+        <section id="tour-trend-chart" className="mt-8 sm:mt-10">
           {history.isLoading ? (
             <LoadingBlock label="Loading PM2.5 trend" />
           ) : history.isError ? (

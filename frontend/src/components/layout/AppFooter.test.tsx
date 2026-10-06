@@ -2,12 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { AppFooter } from "./AppFooter";
+import { TourProvider } from "../common/TourGuide";
 
 describe("AppFooter", () => {
   it("renders branding, station info, and feature links correctly", () => {
     render(
       <BrowserRouter>
-        <AppFooter />
+        <TourProvider>
+          <AppFooter />
+        </TourProvider>
       </BrowserRouter>
     );
 

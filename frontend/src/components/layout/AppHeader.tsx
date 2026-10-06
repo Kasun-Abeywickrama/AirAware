@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Activity, Bell, Calendar, FileText, LayoutDashboard, MapPin, Menu, X } from "lucide-react";
+import { Activity, Bell, Calendar, Compass, FileText, LayoutDashboard, MapPin, Menu, X } from "lucide-react";
 import type { Availability } from "../../api/types";
 import { StatusBadge } from "../common/StatusBadge";
+import { useTour } from "../common/TourGuide";
 
 export type Page = "dashboard" | "forecast" | "planner" | "alerts" | "methodology";
 
@@ -14,6 +15,7 @@ export function AppHeader({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { startTour } = useTour();
 
   const desktopNavLinkClass = ({ isActive }: { isActive: boolean }) =>
     `border-b-2 py-2 text-sm font-semibold transition ${
@@ -54,19 +56,19 @@ export function AppHeader({
         {/* Desktop Navigation (> 768px / md:) */}
         <div className="hidden md:flex md:items-center md:gap-x-4 lg:gap-x-5">
           <nav className="flex items-center gap-4 lg:gap-5" aria-label="Main navigation">
-            <NavLink to="/" end className={desktopNavLinkClass}>
+            <NavLink to="/" end id="nav-link-dashboard" className={desktopNavLinkClass}>
               Dashboard
             </NavLink>
-            <NavLink to="/forecast" className={desktopNavLinkClass}>
+            <NavLink to="/forecast" id="nav-link-forecast" className={desktopNavLinkClass}>
               Forecast
             </NavLink>
-            <NavLink to="/planner" className={desktopNavLinkClass}>
+            <NavLink to="/planner" id="nav-link-planner" className={desktopNavLinkClass}>
               Planner
             </NavLink>
-            <NavLink to="/alerts" className={desktopNavLinkClass}>
+            <NavLink to="/alerts" id="nav-link-alerts" className={desktopNavLinkClass}>
               Alerts
             </NavLink>
-            <NavLink to="/methodology" className={desktopNavLinkClass}>
+            <NavLink to="/methodology" id="nav-link-methodology" className={desktopNavLinkClass}>
               Methodology
             </NavLink>
           </nav>
@@ -125,10 +127,17 @@ export function AppHeader({
             </NavLink>
           </nav>
           <div className="mt-3.5 border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-600">
-            <span className="inline-flex items-center gap-1.5 font-medium">
-              <MapPin className="size-3.5 text-teal-700" aria-hidden="true" />
-              <span>New Delhi Station</span>
-            </span>
+            <button
+              type="button"
+              onClick={() => {
+                closeMenu();
+                startTour();
+              }}
+              className="inline-flex items-center gap-1.5 font-semibold text-teal-800 hover:underline"
+            >
+              <Compass className="size-3.5" aria-hidden="true" />
+              <span>Take a Guided Tour</span>
+            </button>
             <span className="text-slate-400">CPCB CAAQMS</span>
           </div>
         </div>

@@ -69,7 +69,7 @@ export function AlertPreferencesPage() {
           <UnavailablePanel title="Alert preferences are unavailable" message={errorMessage(preference.error)} />
         </div>
       ) : (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="preference-form-heading">
+        <section id="tour-alerts-hero" className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="preference-form-heading">
           <div>
             <h2 id="preference-form-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
               Your preference

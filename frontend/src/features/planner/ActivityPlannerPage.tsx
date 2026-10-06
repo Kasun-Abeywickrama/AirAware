@@ -504,11 +504,17 @@ export function ActivityPlannerPage() {
         </p>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="planner-heading">
+      <section id="tour-planner-hero" className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="planner-heading">
         <div>
-          <h2 id="planner-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
-            Plan your outdoor activity
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 id="planner-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
+              Plan your outdoor activity
+            </h2>
+            <InfoTooltip
+              title="Optimal Exposure Windows"
+              content="Calculates continuous hourly forecast blocks to minimize your PM2.5 inhalation during outdoor tasks."
+            />
+          </div>
           <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
             Select your intended date and activity duration to calculate optimal windows.
           </p>

@@ -5,6 +5,7 @@ import { api } from "./api/client";
 import { AppHeader } from "./components/layout/AppHeader";
 import { AppFooter } from "./components/layout/AppFooter";
 import { LoadingBlock } from "./components/common/DataState";
+import { TourProvider } from "./components/common/TourGuide";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 
 const ONE_MINUTE = 60_000;
@@ -52,29 +53,31 @@ function AppContent() {
   const serviceState = status.data?.status ?? (status.isError ? "unavailable" : "checking");
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      <HashRedirect />
-      <AppHeader serviceState={serviceState} />
-      <div className="flex-1">
-        <Suspense
-          fallback={
-            <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-              <LoadingBlock label="Loading content" />
-            </main>
-          }
-        >
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/forecast" element={<ForecastHistoryPage />} />
-            <Route path="/planner" element={<ActivityPlannerPage />} />
-            <Route path="/alerts" element={<AlertPreferencesPage />} />
-            <Route path="/methodology" element={<MethodologyPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+    <TourProvider>
+      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+        <HashRedirect />
+        <AppHeader serviceState={serviceState} />
+        <div className="flex-1">
+          <Suspense
+            fallback={
+              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+                <LoadingBlock label="Loading content" />
+              </main>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/forecast" element={<ForecastHistoryPage />} />
+              <Route path="/planner" element={<ActivityPlannerPage />} />
+              <Route path="/alerts" element={<AlertPreferencesPage />} />
+              <Route path="/methodology" element={<MethodologyPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
+        <AppFooter />
       </div>
-      <AppFooter />
-    </div>
+    </TourProvider>
   );
 }
 

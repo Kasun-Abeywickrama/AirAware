@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { Activity, Bell, Calendar, Cpu, Database, FileText, Layers, LayoutDashboard, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Bell, Calendar, Compass, Cpu, Database, FileText, Layers, LayoutDashboard, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { useTour } from "../common/TourGuide";
 
 export function AppFooter() {
   const currentYear = new Date().getFullYear();
+  const { startTour } = useTour();
 
   return (
     <footer className="mt-16 border-t border-slate-200 bg-white text-slate-600" aria-label="Site footer">
@@ -82,6 +84,16 @@ export function AppFooter() {
                   <FileText className="size-3.5 text-slate-400 shrink-0" aria-hidden="true" />
                   <span>Research Methodology</span>
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={startTour}
+                  className="inline-flex items-center gap-2 font-semibold text-teal-700 transition hover:text-teal-900"
+                >
+                  <Compass className="size-3.5 text-teal-600 shrink-0" aria-hidden="true" />
+                  <span>Take Guided Tour</span>
+                </button>
               </li>
             </ul>
           </div>
