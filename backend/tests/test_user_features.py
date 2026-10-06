@@ -30,12 +30,35 @@ def pair(hour: int, upper: str):
     return forecast, SimpleNamespace(issued_at=NOW)
 
 
-def test_activity_windows_are_ranked_by_mean_upper_bound() -> None:
+def test_activity_windows_tiebreak_by_mean_upper_bound_when_predicted_equal() -> None:
     windows = _rank_windows([pair(1, "100"), pair(2, "80"), pair(3, "60")], 2)
 
     assert len(windows) == 2
     assert windows[0]["start_at"] == (NOW + timedelta(hours=2)).astimezone(NEW_DELHI_TIMEZONE)
-    assert windows[0]["comparative_score"] == 70
+    assert windows[0]["mean_predicted_value_ug_m3"] == 60
+    assert windows[0]["mean_upper_bound_ug_m3"] == 70
+
+
+def test_activity_windows_are_ranked_by_lowest_predicted_pm25() -> None:
+    def pair_with_pred(hour: int, pred: str, upper: str):
+        forecast = SimpleNamespace(
+            target_at=NOW + timedelta(hours=hour),
+            predicted_value_ug_m3=Decimal(pred),
+            upper_bound_ug_m3=Decimal(upper),
+        )
+        return forecast, SimpleNamespace(issued_at=NOW)
+
+    # Window A (hours 1-2): mean pred 36.7, lower upper bound 57.1
+    # Window B (hours 2-3): mean pred 29.9, higher upper bound 75.5 (cleaner air, wider confidence band)
+    p1 = pair_with_pred(1, "36.7", "57.1")
+    p2 = pair_with_pred(2, "36.7", "57.1")
+    p3 = pair_with_pred(3, "23.1", "93.9")
+    windows = _rank_windows([p1, p2, p3], 2)
+
+    assert len(windows) == 2
+    # Cleanest air (Window B, mean 29.9 µg/m³) is ranked first
+    assert windows[0]["start_at"] == (NOW + timedelta(hours=2)).astimezone(NEW_DELHI_TIMEZONE)
+    assert round(windows[0]["mean_predicted_value_ug_m3"], 1) == 29.9
 
 
 def test_activity_windows_require_consecutive_forecasts() -> None:

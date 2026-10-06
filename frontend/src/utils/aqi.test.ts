@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateAqi, getAqiCategory, getWhoCategory } from "./aqi";
+import { calculateAqi, getAqiCategory, getAqiHexColor, getWhoCategory } from "./aqi";
 
 describe("calculateAqi (US EPA 2024 PM2.5 Linear Interpolation)", () => {
   it("calculates AQI 0 for 0 µg/m³", () => {
@@ -107,5 +107,16 @@ describe("getAqiCategory (US EPA AQI 2024 PM2.5 Standards)", () => {
   });
   it("supports getWhoCategory alias identically", () => {
     expect(getWhoCategory(48.4).category).toBe("unhealthy_sensitive");
+  });
+});
+
+describe("getAqiHexColor", () => {
+  it("returns appropriate hex colors for all AQI categories", () => {
+    expect(getAqiHexColor("good")).toBe("#059669");
+    expect(getAqiHexColor("moderate")).toBe("#d97706");
+    expect(getAqiHexColor("unhealthy_sensitive")).toBe("#ea580c");
+    expect(getAqiHexColor("unhealthy")).toBe("#dc2626");
+    expect(getAqiHexColor("very_unhealthy")).toBe("#9333ea");
+    expect(getAqiHexColor("hazardous")).toBe("#881337");
   });
 });

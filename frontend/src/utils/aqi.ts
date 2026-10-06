@@ -274,3 +274,23 @@ export function getAqiCategory(pm25: number): AqiCategoryInfo {
 
 /** Backward-compatible function alias */
 export const getWhoCategory = getAqiCategory;
+
+/**
+ * Solid hex colour mapping for each AQI category (useful for SVG elements like clock bands).
+ */
+export function getAqiHexColor(category: AqiCategory): string {
+  switch (category) {
+    case "good":
+      return "#059669"; // emerald-600
+    case "moderate":
+      return "#d97706"; // amber-600
+    case "unhealthy_sensitive":
+      return "#ea580c"; // orange-600
+    case "unhealthy":
+      return "#dc2626"; // red-600
+    case "very_unhealthy":
+      return "#9333ea"; // purple-600
+    case "hazardous":
+      return "#881337"; // rose-900 / maroon
+  }
+}

@@ -160,24 +160,20 @@ function newDelhiHour(value: string) {
   return Number(hour ?? 0) % 12;
 }
 
-function rangeColour(window: ActivityPlanWindow, windows: ActivityPlanWindow[]) {
-  const values = windows.map((item) => item.mean_predicted_value_ug_m3);
-  const minimum = Math.min(...values);
-  const maximum = Math.max(...values);
-  const ratio = maximum === minimum ? 0 : (window.mean_predicted_value_ug_m3 - minimum) / (maximum - minimum);
+const RANK_TEAL_COLOURS = [
+  "#0f766e", // Option 1 (Best) – Deepest dark teal
+  "#0d9488", // Option 2 – Rich teal
+  "#14b8a6", // Option 3 – Medium teal
+  "#2dd4bf", // Option 4 – Soft teal
+  "#99f6e4", // Option 5 – Light teal
+];
 
-  if (ratio < 0.25) return "#0f766e";
-  if (ratio < 0.5) return "#0d9488";
-  if (ratio < 0.75) return "#2dd4bf";
-  return "#99f6e4";
-}
-
-function ClockFace({ window, windows }: { window: ActivityPlanWindow; windows: ActivityPlanWindow[] }) {
+function ClockFace({ window, rankIndex }: { window: ActivityPlanWindow; rankIndex: number }) {
   const circumference = 2 * Math.PI * 42;
   const startHour = newDelhiHour(window.start_at);
   const durationHours = Math.max(1, Math.round((new Date(window.end_at).getTime() - new Date(window.start_at).getTime()) / 3_600_000));
   const rangeLength = Math.min(durationHours, 12) * (circumference / 12);
-  const colour = rangeColour(window, windows);
+  const colour = RANK_TEAL_COLOURS[rankIndex] ?? "#0d9488";
   const handAngle = ((startHour * 30 - 90) * Math.PI) / 180;
   const handX = 50 + 23 * Math.cos(handAngle);
   const handY = 50 + 23 * Math.sin(handAngle);
@@ -191,7 +187,7 @@ function ClockFace({ window, windows }: { window: ActivityPlanWindow; windows: A
     >
       <defs>
         <marker id="clock-hand-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="3" markerHeight="3" orient="auto">
-          <path d="M 0 0 L 6 3 L 0 6 z" fill="#cbd5e1" />
+          <path d="M 0 0 L 6 3 L 0 6 z" fill="#94a3b8" />
         </marker>
       </defs>
       <circle cx="50" cy="50" r="42" fill="white" stroke="#e2e8f0" strokeWidth="7" />
@@ -207,7 +203,7 @@ function ClockFace({ window, windows }: { window: ActivityPlanWindow; windows: A
         strokeDashoffset={-startHour * (circumference / 12)}
         transform="rotate(-90 50 50)"
       />
-      <line x1="50" y1="50" x2={handX} y2={handY} stroke="#cbd5e1" strokeWidth="1.25" strokeLinecap="round" markerEnd="url(#clock-hand-arrow)" />
+      <line x1="50" y1="50" x2={handX} y2={handY} stroke="#94a3b8" strokeWidth="1.25" strokeLinecap="round" markerEnd="url(#clock-hand-arrow)" />
       {Array.from({ length: 12 }, (_, index) => {
         const hour = index + 1;
         const angle = ((hour * 30 - 90) * Math.PI) / 180;
@@ -242,7 +238,7 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
               )}
             </div>
             <div className="my-2">
-              <ClockFace window={window} windows={plan.windows} />
+              <ClockFace window={window} rankIndex={index} />
             </div>
             <p className="text-sm font-semibold text-slate-950">
               {formatTime(window.start_at)} – {formatTime(window.end_at)}
@@ -275,9 +271,14 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
   return (
     <div className="mt-6" aria-live="polite">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="font-semibold text-slate-900">
-          Best available times for {formatSelectedDate(plan.date)} · {plan.duration_minutes / 60}-hour activity
-        </h3>
+        <div>
+          <h3 className="font-semibold text-slate-900">
+            Best available times for {formatSelectedDate(plan.date)} · {plan.duration_minutes / 60}-hour activity
+          </h3>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Ranked by lowest predicted PM2.5 (cleanest air first). Darker clock bands indicate more optimal times.
+          </p>
+        </div>
         <div className="inline-flex w-fit rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Result display mode">
           {modes.map(({ id, label, Icon }) => (
             <button

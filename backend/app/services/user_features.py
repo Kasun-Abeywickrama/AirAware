@@ -188,17 +188,22 @@ def _rank_windows(pairs, duration_hours: int) -> list[dict[str, Any]]:
             continue
         points = [float(item[0].predicted_value_ug_m3) for item in group]
         uppers = [float(item[0].upper_bound_ug_m3) for item in group]
+        mean_pred = sum(points) / len(points)
+        mean_upper = sum(uppers) / len(uppers)
         windows.append(
             {
                 "start_at": times[0].astimezone(NEW_DELHI_TIMEZONE),
                 "end_at": (times[-1] + timedelta(hours=1)).astimezone(NEW_DELHI_TIMEZONE),
-                "mean_predicted_value_ug_m3": sum(points) / len(points),
-                "mean_upper_bound_ug_m3": sum(uppers) / len(uppers),
-                "comparative_score": sum(uppers) / len(uppers),
-                "rationale": "Ranked by the lowest mean upper forecast bound.",
+                "mean_predicted_value_ug_m3": mean_pred,
+                "mean_upper_bound_ug_m3": mean_upper,
+                "comparative_score": mean_pred,
+                "rationale": "Ranked by lowest predicted PM2.5 concentration (cleanest air first).",
             }
         )
-    return sorted(windows, key=lambda item: item["comparative_score"])
+    return sorted(
+        windows,
+        key=lambda item: (item["mean_predicted_value_ug_m3"], item["mean_upper_bound_ug_m3"]),
+    )
 
 
 def _preference_item(preference) -> dict[str, Any]:
