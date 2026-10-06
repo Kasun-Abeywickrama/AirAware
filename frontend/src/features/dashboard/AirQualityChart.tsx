@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ForecastHistory } from "../../api/types";
 import { formatDateTime, formatPm25 } from "../../utils/format";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 
 export interface ChartPoint {
   timestamp: string;
@@ -71,7 +72,13 @@ export function AirQualityChart({
     >
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
-          <h2 id="trend-heading" className="text-base font-semibold text-slate-950 sm:text-lg">Recent PM2.5 and forecast</h2>
+          <div className="flex items-center gap-2">
+            <h2 id="trend-heading" className="text-base font-semibold text-slate-950 sm:text-lg">Recent PM2.5 and forecast</h2>
+            <InfoTooltip
+              title="Time-Series Trend"
+              content="Solid line shows actual past measurements. Dashed line shows future forecasts with shaded uncertainty range."
+            />
+          </div>
           <p className="mt-1 text-xs text-slate-600 sm:text-sm">Observed values are solid. Forecast values and their ranges are shown ahead.</p>
         </div>
         <div className="flex items-center justify-between gap-3 text-xs text-slate-500 sm:justify-end">

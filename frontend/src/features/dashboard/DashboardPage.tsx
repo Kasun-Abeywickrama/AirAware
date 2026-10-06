@@ -9,6 +9,7 @@ import { LoadingBlock, UnavailablePanel } from "../../components/common/DataStat
 import { AqiBadge } from "../../components/common/AqiBadge";
 import { ThresholdAlertBanner } from "../../components/common/ThresholdAlertBanner";
 import { ForecastCard } from "../forecast/ForecastCard";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 import { formatDateTime, formatPm25, formatRelativeAge } from "../../utils/format";
 import { EPA_AQI_SCALE, getAqiCategory } from "../../utils/aqi";
 
@@ -27,7 +28,13 @@ function AqiScaleLegend({ currentPm25 }: { currentPm25: number }) {
   return (
     <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 sm:px-4">
       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">EPA AQI Scale</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">EPA AQI Scale</span>
+          <InfoTooltip
+            title="Air Quality Index Scale"
+            content="Standard US EPA health classification scale based on ambient PM2.5 concentrations."
+          />
+        </div>
         <span className="text-[11px] text-slate-400">PM2.5 (µg/m³)</span>
       </div>
       <ol className="flex overflow-x-auto pb-1.5 pt-0.5 gap-1.5 custom-scrollbar sm:pb-0 sm:pt-0 sm:overflow-visible sm:gap-1.5" aria-label="US EPA AQI PM2.5 air quality scale">
@@ -115,6 +122,10 @@ export function DashboardPage() {
             <h2 id="current-heading" className="text-xl font-semibold">
               Current PM2.5
             </h2>
+            <InfoTooltip
+              title="Current PM2.5 Reading"
+              content="Real-time fine particulate matter (particles ≤ 2.5 micrometers) reported in micrograms per cubic meter (µg/m³)."
+            />
           </div>
           {conditions.isLoading ? (
             <LoadingBlock label="Loading current PM2.5" />
@@ -129,7 +140,14 @@ export function DashboardPage() {
                 <article className="rounded-2xl bg-gradient-to-br from-teal-800 to-cyan-800 p-5 text-white shadow-lg sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-medium text-teal-100 sm:text-sm">Latest approved observation</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-medium text-teal-100 sm:text-sm">Latest approved observation</p>
+                        <InfoTooltip
+                          title="Verified Observation"
+                          content="Validated sensor reading directly pulled from the official CPCB monitoring station."
+                          iconClassName="size-3.5 text-teal-200/80 hover:text-white transition-colors"
+                        />
+                      </div>
                       <p className="mt-2 text-4xl font-bold tracking-tight sm:mt-3 sm:text-6xl">
                         {formatPm25(conditions.data.pm25.value_ug_m3)} <span className="text-base font-medium text-teal-100 sm:text-xl">µg/m³</span>
                       </p>
@@ -176,6 +194,10 @@ export function DashboardPage() {
             <h2 id="forecast-heading" className="text-xl font-semibold">
               Saved forecasts
             </h2>
+            <InfoTooltip
+              title="ML Hourly Forecasts"
+              content="Machine learning predictions projected up to 24 hours into the future using temporal lag patterns and meteorology."
+            />
           </div>
           {forecasts.isLoading ? (
             <div className="grid gap-4 md:grid-cols-3">

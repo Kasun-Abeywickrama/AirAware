@@ -5,6 +5,7 @@ import { api } from "../../api/client";
 import { formatDateTime, formatPm25 } from "../../utils/format";
 import { AirQualityChart } from "../dashboard/AirQualityChart";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 
 const RANGES = [24, 72, 168] as const;
 
@@ -36,9 +37,15 @@ export function ForecastHistoryPage() {
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-8 sm:p-6" aria-labelledby="history-controls-heading">
         <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
-            <h2 id="history-controls-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
-              Choose a time range
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 id="history-controls-heading" className="text-base font-semibold text-slate-950 sm:text-lg">
+                Choose a time range
+              </h2>
+              <InfoTooltip
+                title="Historical Analysis Range"
+                content="Switch between the last 24 hours (1 day), 72 hours (3 days), or 168 hours (1 week) of observed air quality data."
+              />
+            </div>
             <p className="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">A longer range gives more context; a shorter range is easier to scan.</p>
           </div>
           <div className="grid grid-cols-3 w-full sm:w-fit sm:flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Forecast history time range">
@@ -71,9 +78,15 @@ export function ForecastHistoryPage() {
             <>
               <div className="mt-5 sm:mt-6 grid gap-2.5 sm:gap-3 sm:grid-cols-3">
                 <article className="rounded-xl bg-slate-50 p-3 sm:p-4">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
-                    <Database className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
-                    Latest reading
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
+                      <Database className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
+                      Latest reading
+                    </div>
+                    <InfoTooltip
+                      title="Latest Observed Reading"
+                      content="The most recent validated PM2.5 measurement recorded by the monitoring station."
+                    />
                   </div>
                   <p className="mt-2 text-xl font-bold text-slate-950 sm:mt-3 sm:text-2xl">
                     {latestObservation ? `${formatPm25(latestObservation.value_ug_m3)} µg/m³` : "—"}
@@ -83,17 +96,29 @@ export function ForecastHistoryPage() {
                   </p>
                 </article>
                 <article className="rounded-xl bg-slate-50 p-3 sm:p-4">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
-                    <LineChart className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
-                    Forecast points
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
+                      <LineChart className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
+                      Forecast points
+                    </div>
+                    <InfoTooltip
+                      title="Forecast Data Points"
+                      content="Total number of machine learning prediction checkpoints generated across this time window."
+                    />
                   </div>
                   <p className="mt-2 text-xl font-bold text-slate-950 sm:mt-3 sm:text-2xl">{forecastCount}</p>
                   <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Saved model estimates in this view</p>
                 </article>
                 <article className="rounded-xl bg-slate-50 p-3 sm:p-4">
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
-                    <CalendarClock className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
-                    Displayed period
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:text-sm">
+                      <CalendarClock className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
+                      Displayed period
+                    </div>
+                    <InfoTooltip
+                      title="Active Window"
+                      content="Full lookback span currently visualized on the interactive chart."
+                    />
                   </div>
                   <p className="mt-2 text-xl font-bold text-slate-950 sm:mt-3 sm:text-2xl">{history.data.hours} hours</p>
                   <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">Stored data available for this range</p>

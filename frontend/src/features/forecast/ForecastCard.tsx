@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp, Clock3 } from "lucide-react";
 import { useState } from "react";
 import type { ForecastExplanationFactor, ForecastItem } from "../../api/types";
 import { formatDateTime, formatPm25 } from "../../utils/format";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 
 export function ForecastCard({ forecast }: { forecast: ForecastItem }) {
   const [showAllFactors, setShowAllFactors] = useState(false);
@@ -20,12 +21,24 @@ export function ForecastCard({ forecast }: { forecast: ForecastItem }) {
         {formatPm25(forecast.predicted_value_ug_m3)} <span className="text-base font-medium text-slate-500">µg/m³</span>
       </p>
       <p className="mt-2 text-sm text-slate-600">Target: {formatDateTime(forecast.target_at)}</p>
-      <p className="mt-4 border-t border-slate-100 pt-3 text-xs font-medium text-slate-600">
-        Forecast range: {formatPm25(forecast.lower_bound_ug_m3)}–{formatPm25(forecast.upper_bound_ug_m3)} µg/m³
-      </p>
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-medium text-slate-600">
+        <span>
+          Forecast range: {formatPm25(forecast.lower_bound_ug_m3)}–{formatPm25(forecast.upper_bound_ug_m3)} µg/m³
+        </span>
+        <InfoTooltip
+          title="Conformal Prediction Range"
+          content="Statistically guaranteed 90% confidence window indicating the expected range of air pollution levels."
+        />
+      </div>
       {forecast.explanation && topFactors.length > 0 && (
         <section className="mt-5 border-t border-slate-100 pt-4" aria-label={`Why the ${forecast.horizon_hours}-hour forecast looks this way`}>
-          <h4 className="text-sm font-semibold text-slate-900">What influenced this forecast</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-slate-900">What influenced this forecast</h4>
+            <InfoTooltip
+              title="Explainable AI (SHAP)"
+              content="Shows which environmental patterns and historical air quality trends had the biggest impact on this prediction."
+            />
+          </div>
           <p className="mt-1 text-xs leading-5 text-slate-600">The three strongest patterns in this forecast.</p>
           <ul className="mt-3 space-y-2">
             {topFactors.map((factor) => (

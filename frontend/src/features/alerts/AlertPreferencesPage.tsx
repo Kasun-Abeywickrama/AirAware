@@ -5,6 +5,7 @@ import { api } from "../../api/client";
 import { formatDateTime } from "../../utils/format";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { getBrowserId } from "../../utils/browserId";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -87,7 +88,11 @@ export function AlertPreferencesPage() {
               <label className="grid gap-2 text-xs font-semibold text-slate-800 sm:gap-3 sm:text-sm" htmlFor="threshold">
                 <span className="flex items-center gap-2">
                   <SlidersHorizontal className="size-3.5 text-teal-700 sm:size-4" aria-hidden="true" />
-                  PM2.5 threshold
+                  <span>PM2.5 threshold</span>
+                  <InfoTooltip
+                    title="Alert Trigger Level"
+                    content="When the live PM2.5 level exceeds this value, an alert notification and banner will be triggered."
+                  />
                 </span>
                 <span className="flex items-center gap-2">
                   <input
@@ -105,9 +110,15 @@ export function AlertPreferencesPage() {
                 </span>
               </label>
               <div className="mt-5 sm:mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  EPA Reference Thresholds
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    EPA Reference Thresholds
+                  </p>
+                  <InfoTooltip
+                    title="Standard EPA Limits"
+                    content="Quick presets aligned with US EPA health categories: Moderate (35 µg/m³), Sensitive (55 µg/m³), and Unhealthy (125 µg/m³)."
+                  />
+                </div>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {QUICK_THRESHOLDS.map(({ value, label, desc }) => (
                     <button

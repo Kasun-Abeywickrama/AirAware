@@ -6,6 +6,7 @@ import type { ActivityPlan, ActivityPlanWindow } from "../../api/types";
 import { formatPm25 } from "../../utils/format";
 import { calculateAqi, getAqiCategory } from "../../utils/aqi";
 import { UnavailablePanel } from "../../components/common/DataState";
+import { InfoTooltip } from "../../components/common/InfoTooltip";
 
 const DURATIONS = [60, 120, 180, 240, 360, 480];
 
