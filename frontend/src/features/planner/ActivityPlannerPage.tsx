@@ -261,6 +261,83 @@ function ClockCircles({ plan }: { plan: ActivityPlan }) {
   );
 }
 
+function PlannerExplanation() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="mt-5 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 sm:p-3.5 transition">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between text-left text-xs font-semibold text-slate-700 hover:text-teal-900 transition focus:outline-none"
+        aria-expanded={isOpen}
+      >
+        <span className="flex items-center gap-2">
+          <Info className="size-4 text-teal-600" aria-hidden="true" />
+          <span>How are these times and values calculated?</span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+          <span>{isOpen ? "Hide guide" : "How it works"}</span>
+          <ChevronDown
+            className={`size-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="mt-3.5 border-t border-slate-200/80 pt-3.5 text-xs text-slate-600">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
+              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-teal-600" />
+                1. Best Window
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-600">
+                Our AI model checks every continuous time block of your chosen duration across the day and sorts them from lowest PM2.5 to highest. The cleanest air is always <strong>Option 1</strong>.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
+              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-amber-500" />
+                2. AQI (Air Index)
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-600">
+                Official EPA standard (0–500 scale). Values under 50 are Good (emerald), 51–100 Moderate (amber), and 101+ Sensitive (orange).
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
+              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-slate-500" />
+                3. Forecast PM2.5
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-600">
+                The expected average concentration of fine inhalable particles (µg/m³) during that window. Lower values mean cleaner, safer air.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200/70 bg-white p-3 shadow-xs">
+              <p className="font-semibold text-slate-900 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-slate-400" />
+                4. Upper Range
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-600">
+                The 95% worst-case safety bound. Even if atmospheric conditions worsen unexpectedly, pollution is projected to stay below this ceiling.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            💡 <strong>Clock dial:</strong> The needle points to the start time, and the green arc marks your activity duration. Darker green bands indicate more optimal times.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlanResults({ plan }: { plan: ActivityPlan }) {
   const [view, setView] = useState<ViewMode>("clock");
   const modes: Array<{ id: ViewMode; label: string; Icon: typeof Grid2X2 }> = [
@@ -302,7 +379,8 @@ function PlanResults({ plan }: { plan: ActivityPlan }) {
         {view === "cards" && <WindowCards plan={plan} />}
         {view === "table" && <WindowTable plan={plan} />}
       </div>
-      <p className="mt-4 text-xs leading-5 text-slate-500">{plan.disclaimer}</p>
+      <PlannerExplanation />
+      <p className="mt-3 text-xs leading-5 text-slate-500">{plan.disclaimer}</p>
     </div>
   );
 }
