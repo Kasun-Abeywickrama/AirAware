@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api/client";
-import { AppHeader, type Page } from "./components/layout/AppHeader";
+import { AppHeader } from "./components/layout/AppHeader";
 import { LoadingBlock } from "./components/common/DataState";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 
@@ -20,83 +21,63 @@ const MethodologyPage = lazy(() =>
   import("./features/methodology/MethodologyPage").then((module) => ({ default: module.MethodologyPage })),
 );
 
-function pageFromHash(): Page {
-  if (window.location.hash === "#forecast") return "forecast";
-  if (window.location.hash === "#planner") return "planner";
-  if (window.location.hash === "#alerts") return "alerts";
-  if (window.location.hash === "#methodology") return "methodology";
-  return "dashboard";
-}
-
-export default function App() {
-  const [page, setPage] = useState<Page>(pageFromHash);
+/**
+ * Handles backwards-compatible redirects for legacy URLs with hash fragments
+ * (e.g. `/#forecast` -> `/forecast`, `/#planner` -> `/planner`).
+ */
+function HashRedirect() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const syncPage = () => setPage(pageFromHash());
-    window.addEventListener("hashchange", syncPage);
-    return () => window.removeEventListener("hashchange", syncPage);
-  }, []);
+    if (location.hash) {
+      const cleanTarget = location.hash.replace("#", "");
+      if (["forecast", "planner", "alerts", "methodology"].includes(cleanTarget)) {
+        navigate(`/${cleanTarget}`, { replace: true });
+      }
+    }
+  }, [location.hash, navigate]);
 
-  const status = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: ONE_MINUTE, staleTime: ONE_MINUTE });
+  return null;
+}
+
+function AppContent() {
+  const status = useQuery({
+    queryKey: ["status"],
+    queryFn: api.status,
+    refetchInterval: ONE_MINUTE,
+    staleTime: ONE_MINUTE,
+  });
   const serviceState = status.data?.status ?? (status.isError ? "unavailable" : "checking");
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      {page === "dashboard" ? (
-        <DashboardPage />
-      ) : page === "forecast" ? (
-        <>
-          <AppHeader page="forecast" serviceState={serviceState} />
-          <Suspense
-            fallback={
-              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-                <LoadingBlock label="Loading forecast history" />
-              </main>
-            }
-          >
-            <ForecastHistoryPage />
-          </Suspense>
-        </>
-      ) : page === "planner" ? (
-        <>
-          <AppHeader page="planner" serviceState={serviceState} />
-          <Suspense
-            fallback={
-              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-                <LoadingBlock label="Loading activity planner" />
-              </main>
-            }
-          >
-            <ActivityPlannerPage />
-          </Suspense>
-        </>
-      ) : page === "alerts" ? (
-        <>
-          <AppHeader page="alerts" serviceState={serviceState} />
-          <Suspense
-            fallback={
-              <main id="main-content" className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
-                <LoadingBlock label="Loading alert preferences" />
-              </main>
-            }
-          >
-            <AlertPreferencesPage />
-          </Suspense>
-        </>
-      ) : (
-        <>
-          <AppHeader page="methodology" serviceState={serviceState} />
-          <Suspense
-            fallback={
-              <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-                <LoadingBlock label="Loading standards & methodology" />
-              </main>
-            }
-          >
-            <MethodologyPage />
-          </Suspense>
-        </>
-      )}
+      <HashRedirect />
+      <AppHeader serviceState={serviceState} />
+      <Suspense
+        fallback={
+          <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+            <LoadingBlock label="Loading content" />
+          </main>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/forecast" element={<ForecastHistoryPage />} />
+          <Route path="/planner" element={<ActivityPlannerPage />} />
+          <Route path="/alerts" element={<AlertPreferencesPage />} />
+          <Route path="/methodology" element={<MethodologyPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }

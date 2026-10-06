@@ -5,7 +5,6 @@ import { api } from "../../api/client";
 import { LoadingBlock, UnavailablePanel } from "../../components/common/DataState";
 import { AqiBadge } from "../../components/common/AqiBadge";
 import { ForecastCard } from "../forecast/ForecastCard";
-import { AppHeader } from "../../components/layout/AppHeader";
 import { formatDateTime, formatPm25, formatRelativeAge } from "../../utils/format";
 import { EPA_AQI_SCALE, getAqiCategory } from "../../utils/aqi";
 
@@ -61,12 +60,8 @@ export function DashboardPage() {
   const conditions = useQuery({ queryKey: ["conditions"], queryFn: api.currentConditions, refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
   const forecasts = useQuery({ queryKey: ["forecasts"], queryFn: api.latestForecasts, refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
   const history = useQuery({ queryKey: ["history", 72], queryFn: () => api.forecastHistory(72), refetchInterval: FIVE_MINUTES, staleTime: FIVE_MINUTES });
-  const serviceState = status.data?.status ?? (status.isError ? "unavailable" : "checking");
-
   return (
-    <>
-      <AppHeader page="dashboard" serviceState={serviceState} />
-      <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+    <main id="main-content" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
         <section className="mb-8 max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Live air information</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Understand the latest PM2.5 data and forecast.</h1>
@@ -173,6 +168,5 @@ export function DashboardPage() {
           </p>
         </aside>
       </main>
-    </>
   );
 }
