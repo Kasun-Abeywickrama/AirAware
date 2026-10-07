@@ -1,3 +1,8 @@
+"""Repository for forecast run audit records.
+
+Manages execution lifecycle tracking for ML inference jobs (start, succeed, fail).
+"""
+
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -8,7 +13,7 @@ from ..models.forecast_run import ForecastRun
 
 
 class ForecastRunRepository:
-    """Create and complete forecast generation audit records."""
+    """Data access layer for the 'forecast_runs' table."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -20,6 +25,7 @@ class ForecastRunRepository:
         model_version: str,
         location_id: UUID | None = None,
     ) -> ForecastRun:
+        """Create a new ForecastRun record in 'running' status."""
         run = ForecastRun(
             issued_at=issued_at,
             model_version=model_version,
@@ -31,6 +37,7 @@ class ForecastRunRepository:
         return run
 
     def mark_succeeded(self, run: ForecastRun, *, input_version: str) -> ForecastRun:
+        """Update a ForecastRun to 'succeeded' with its input snapshot hash and completion time."""
         run.status = "succeeded"
         run.input_version = input_version
         run.failure_reason = None
@@ -39,6 +46,7 @@ class ForecastRunRepository:
         return run
 
     def mark_failed(self, run: ForecastRun, reason: str) -> ForecastRun:
+        """Update a ForecastRun to 'failed' with a diagnostic error summary."""
         run.status = "failed"
         run.failure_reason = reason
         run.completed_at = datetime.now(timezone.utc)
@@ -46,6 +54,10 @@ class ForecastRunRepository:
         return run
 
     def latest_succeeded(self, location_id: UUID | None = None) -> ForecastRun | None:
+        """Fetch the most recent successfully completed ForecastRun.
+
+        Includes fallback to global run if no station-specific run is found.
+        """
         statement = select(ForecastRun).where(ForecastRun.status == "succeeded")
         if location_id is not None:
             station_run = self._session.scalar(
@@ -55,6 +67,7 @@ class ForecastRunRepository:
             )
             if station_run is not None:
                 return station_run
+            # Fallback for runs created before location_id was populated
             return self._session.scalar(
                 statement.where(ForecastRun.location_id.is_(None))
                 .order_by(ForecastRun.issued_at.desc())
@@ -65,6 +78,7 @@ class ForecastRunRepository:
         )
 
     def get_latest(self, location_id: UUID | None = None) -> ForecastRun | None:
+        """Fetch the most recent ForecastRun regardless of success/failure status."""
         statement = select(ForecastRun)
         if location_id is not None:
             station_run = self._session.scalar(

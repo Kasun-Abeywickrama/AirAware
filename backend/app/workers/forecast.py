@@ -1,4 +1,13 @@
-"""Manual command to generate stored forecasts from validated live inputs."""
+"""
+Worker: Machine Learning Forecast Generation and Historical Backfill Pipeline.
+
+This module automates the execution of operational air quality predictions:
+1. Validates ML model input readiness (168h PM2.5 history and 24h weather sequences).
+2. Executes ML model inference across 1h, 6h, and 24h horizons.
+3. Calculates conformal prediction uncertainty bounds (lower and upper limits).
+4. Generates TreeSHAP and Integrated Gradients XAI factor attributions.
+5. Backfills any missing historical forecast runs caused by server downtime.
+"""
 
 from datetime import datetime, timedelta, timezone
 import logging
@@ -17,16 +26,35 @@ from ..repositories.system_events import SystemEventRepository
 from ..services.forecast_inputs import check_forecast_input_readiness, evaluate_forecast_input_records
 from ..services.forecasting import ForecastGenerationError, PackagedModelService
 
+
 logger = logging.getLogger(__name__)
 
 
 def generate_forecasts(settings: Settings | None = None, backfill_recent: bool = True) -> bool:
-    """Generate the three forecast horizons, or record one safe failed run."""
+    """
+    Execute full operational ML forecasting cycle.
+
+    Workflow:
+    1. Initialize PackagedModelService and verify artifact SHA-256 integrity.
+    2. Check that the station has 168 hours of PM2.5 history and 24 hours of complete weather data.
+    3. Run GRU/XGBoost inference to produce point predictions and conformal bounds.
+    4. Compute TreeSHAP and Integrated Gradients XAI factor contributions.
+    5. Save forecast predictions and XAI explanations in database.
+    6. Optionally backfill missing hourly forecast runs from recent system downtime (up to 24h).
+
+    Args:
+        settings: Application configuration settings.
+        backfill_recent: Flag to backfill missing recent forecast runs (default: True).
+
+    Returns:
+        True if forecast generation succeeded, False otherwise.
+    """
     active_settings = settings or get_settings()
     session = get_session_factory()()
     issued_at = datetime.now(timezone.utc)
     run = None
     try:
+        # Step 1: Initialize model service
         try:
             service = PackagedModelService(active_settings)
             model_version = service.model_version
@@ -34,6 +62,7 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
             service = None
             model_version = "unavailable"
 
+        # Step 2: Retrieve active station
         location = MonitoringLocationRepository(session).get_by_provider_location_id(
             "openaq", str(active_settings.openaq_location_id)
         )
@@ -44,18 +73,22 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
 
         runs = ForecastRunRepository(session)
         events = SystemEventRepository(session)
+
+        # Step 3: Record start of forecast run
         run = runs.start(
             issued_at=issued_at,
             model_version=model_version,
             location_id=location.id,
         )
 
+        # Step 4: Validate model input contract (168h lags and 24h weather)
         readiness = check_forecast_input_readiness(
             session, location_id=location.id, settings=active_settings
         )
         if not readiness.ready or readiness.issue_at is None:
             raise ForecastGenerationError(readiness.reason or "Forecast inputs are unavailable.")
 
+        # Step 5: Execute ML inference & XAI explanations
         forecasts, input_version = service.generate(
             pm25_records=list(
                 session.scalars(
@@ -69,6 +102,8 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
             ),
             issue_at=readiness.issue_at,
         )
+
+        # Step 6: Persist forecast predictions and explanations to database
         repository = ForecastRepository(session)
         for forecast in forecasts:
             saved_forecast = repository.create(
@@ -86,10 +121,13 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
                 completeness_error_ug_m3=forecast.explanation.completeness_error_ug_m3,
                 factors=forecast.explanation.factors,
             )
+
+        # Step 7: Mark forecast run as succeeded
         runs.mark_succeeded(run, input_version=input_version)
         events.record(component="forecast", level="info", message="Operational forecasts generated.")
         session.commit()
 
+        # Step 8: Optional historical backfill
         if backfill_recent and service is not None:
             _backfill_historical_forecasts(
                 session=session,
@@ -101,6 +139,7 @@ def generate_forecasts(settings: Settings | None = None, backfill_recent: bool =
 
         return True
     except ForecastGenerationError as error:
+        # Gracefully log failure in DB audit tables
         if run is None:
             session.rollback()
             return False
@@ -121,11 +160,26 @@ def _backfill_historical_forecasts(
     settings: Settings,
     max_hours: int = 24,
 ) -> int:
-    """Safely backfill missing hourly forecast runs from recent system downtime."""
+    """
+    Safely backfill missing hourly forecast runs from recent system downtime (up to max_hours).
+
+    Ensures the historical evaluation charts have continuous comparison points without gaps.
+
+    Args:
+        session: Active database session.
+        service: Initialized PackagedModelService instance.
+        location: MonitoringLocation record.
+        settings: Application configuration settings.
+        max_hours: Maximum past hours to inspect for gaps (default: 24).
+
+    Returns:
+        Number of successfully backfilled forecast runs.
+    """
     try:
         now = datetime.now(timezone.utc)
         since = now - timedelta(hours=max_hours)
 
+        # Identify existing successful runs in the window
         existing_runs = session.scalars(
             select(ForecastRun).where(
                 ForecastRun.issued_at >= since,
@@ -156,6 +210,7 @@ def _backfill_historical_forecasts(
         end_hour = now.replace(minute=0, second=0, microsecond=0)
         current_hour = start_hour
 
+        # Iterate through hourly slots and fill gaps
         while current_hour < end_hour:
             if current_hour not in existing_hours:
                 historical_pm = [p for p in all_pm25 if p.observed_at <= current_hour]

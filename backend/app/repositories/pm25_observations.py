@@ -1,4 +1,7 @@
-"""Queries for approved PM2.5 observations."""
+"""Repository for PM2.5 observation data access.
+
+Handles persistence, deduplication, latest reading queries, and time-series fetching.
+"""
 
 from datetime import datetime
 from decimal import Decimal
@@ -11,7 +14,7 @@ from ..models.pm25_observation import Pm25Observation
 
 
 class Pm25ObservationRepository:
-    """Store and retrieve approved PM2.5 measurements."""
+    """Data access layer for the 'pm25_observations' table."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -24,7 +27,7 @@ class Pm25ObservationRepository:
         observed_at: datetime,
         value_ug_m3: Decimal,
     ) -> Pm25Observation:
-        """Store one validated PM2.5 reading in the canonical unit."""
+        """Insert a single verified PM2.5 observation into the database."""
         observation = Pm25Observation(
             location_id=location_id,
             ingestion_run_id=ingestion_run_id,
@@ -37,7 +40,7 @@ class Pm25ObservationRepository:
         return observation
 
     def get_latest_for_location(self, location_id: UUID) -> Pm25Observation | None:
-        """Return the newest approved observation for one location."""
+        """Fetch the most recent PM2.5 reading for a monitoring station."""
         statement = (
             select(Pm25Observation)
             .where(Pm25Observation.location_id == location_id)
@@ -54,7 +57,11 @@ class Pm25ObservationRepository:
         observed_at: datetime,
         value_ug_m3: Decimal,
     ) -> tuple[Pm25Observation, bool]:
-        """Store an approved observation unless the location/time already exists."""
+        """Insert observation only if no record exists for (location_id, observed_at).
+
+        Returns a tuple: (observation_record, was_inserted_boolean).
+        Used during batch history ingestion to avoid duplicate row conflicts.
+        """
         existing = self._session.scalar(
             select(Pm25Observation).where(
                 Pm25Observation.location_id == location_id,
@@ -75,7 +82,7 @@ class Pm25ObservationRepository:
         )
 
     def list_since(self, *, location_id: UUID, since: datetime) -> list[Pm25Observation]:
-        """Return approved observations in ascending time order for a chart."""
+        """Fetch chronological observations from a given timestamp onwards for charts."""
         statement = (
             select(Pm25Observation)
             .where(

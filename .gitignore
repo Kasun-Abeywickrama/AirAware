@@ -24,3 +24,6 @@ Thumbs.db
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Viva / internal notes
+docs/backend_architecture_guide.md

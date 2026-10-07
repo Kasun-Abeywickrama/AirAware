@@ -1,4 +1,7 @@
-"""Queries for approved weather records."""
+"""Repository for weather records data access.
+
+Manages persistence, latest atmospheric state queries, and upserting hourly weather features.
+"""
 
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -11,7 +14,7 @@ from ..models.weather_record import WeatherRecord
 
 
 class WeatherRecordRepository:
-    """Store and retrieve approved weather inputs."""
+    """Data access layer for the 'weather_records' table."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -31,7 +34,7 @@ class WeatherRecordRepository:
         shortwave_radiation_w_m2: Decimal,
         wind_direction_degrees: Decimal,
     ) -> WeatherRecord:
-        """Store one validated weather record in the application units."""
+        """Insert a single validated meteorological record into the database."""
         record = WeatherRecord(
             location_id=location_id,
             ingestion_run_id=ingestion_run_id,
@@ -50,7 +53,7 @@ class WeatherRecordRepository:
         return record
 
     def get_latest_for_location(self, location_id: UUID) -> WeatherRecord | None:
-        """Return the newest weather record for one location."""
+        """Fetch the most recent weather record for a monitoring station."""
         statement = (
             select(WeatherRecord)
             .where(WeatherRecord.location_id == location_id)
@@ -74,7 +77,11 @@ class WeatherRecordRepository:
         shortwave_radiation_w_m2: Decimal,
         wind_direction_degrees: Decimal,
     ) -> tuple[WeatherRecord, bool]:
-        """Store or refresh the newest approved weather value for a location/time."""
+        """Insert a new weather record or update an existing one if valid_at already exists.
+
+        Returns a tuple: (weather_record, was_inserted_boolean).
+        Allows updating past forecast weather values with newer, refined forecasts.
+        """
         existing = self._session.scalar(
             select(WeatherRecord).where(
                 WeatherRecord.location_id == location_id,
@@ -82,6 +89,7 @@ class WeatherRecordRepository:
             )
         )
         if existing is not None:
+            # Update existing hourly weather record with fresh provider values
             existing.ingestion_run_id = ingestion_run_id
             existing.temperature_c = temperature_c
             existing.humidity_percent = humidity_percent
@@ -95,6 +103,7 @@ class WeatherRecordRepository:
             self._session.flush()
             return existing, False
 
+        # Insert new record if none exists for (location_id, valid_at)
         return (
             self.create_approved(
                 location_id=location_id,

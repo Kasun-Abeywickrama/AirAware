@@ -1,4 +1,12 @@
-"""Manual live data ingestion command."""
+"""
+Worker: Live Data Ingestion Pipeline.
+
+This module automates data acquisition from external environmental APIs:
+1. OpenAQ: Real-time PM2.5 measurements and 168-hour history.
+2. Open-Meteo: Hourly meteorological metrics (temperature, humidity, wind, pressure, precipitation, solar radiation).
+
+It performs rigorous data validation and logs audit records to `IngestionRun` and `SystemEvent` tables.
+"""
 
 from datetime import datetime, timedelta, timezone
 
@@ -14,13 +22,29 @@ from ..services.validation import InputValidationError, validate_pm25_input, val
 
 
 def ingest_all(settings: Settings | None = None) -> bool:
-    """Fetch both providers once, recording their independent outcomes."""
+    """
+    Execute full ingestion cycle for both PM2.5 and Weather providers.
+
+    Workflow:
+    1. Upsert monitoring station metadata in database.
+    2. Ingest real-time and historical PM2.5 data from OpenAQ.
+    3. Ingest meteorological parameters from Open-Meteo.
+    4. Record execution status and log audit events.
+
+    Args:
+        settings: Application configuration settings.
+
+    Returns:
+        True if both providers succeeded, False if any provider encountered an error.
+    """
     active_settings = settings or get_settings()
     session = get_session_factory()()
     try:
+        # Ensure active monitoring location is registered in DB
         location = MonitoringLocationRepository(session).upsert_configured_openaq_location(active_settings)
         session.commit()
 
+        # Run independent provider ingestions
         pm25_success = _ingest_pm25(session, location.id, active_settings)
         weather_success = _ingest_weather(session, location.id, active_settings)
         return pm25_success and weather_success
@@ -29,25 +53,32 @@ def ingest_all(settings: Settings | None = None) -> bool:
 
 
 def _ingest_pm25(session, location_id, settings: Settings) -> bool:
+    """
+    Fetch, validate, and store PM2.5 observations from OpenAQ API.
+
+    Enforces staleness guardrails and deduplication.
+    """
     runs = IngestionRunRepository(session)
     events = SystemEventRepository(session)
     run = runs.start("pm25")
     try:
         adapter = OpenAQAdapter(settings)
         latest = adapter.latest_pm25()
+
+        # Check staleness guardrail
         if datetime.now(timezone.utc) - latest.observed_at > timedelta(
             minutes=settings.maximum_observation_age_minutes
         ):
             raise InputValidationError("PM2.5 observation is stale.")
 
+        # Fetch 168+ hours of history for ML model lag window
         readings_by_time = {
             reading.observed_at: reading
-            # The model needs 169 local hourly PM2.5 points (current hour plus
-            # 168 lags). New Delhi's UTC offset is 30 minutes, and OpenAQ's
-            # end-boundary aggregation can omit the first requested hour.
             for reading in adapter.hourly_pm25_history(settings.pm25_history_hours + 2)
         }
         readings_by_time[latest.observed_at] = latest
+
+        # Validate PM2.5 values (non-negative, numeric, timezone-aware)
         validated_readings = [
             (
                 reading.observed_at,
@@ -60,6 +91,7 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
             for reading in readings_by_time.values()
         ]
 
+        # Insert new observation records (idempotent upsert)
         repository = Pm25ObservationRepository(session)
         created_count = 0
         for observed_at, value in validated_readings:
@@ -70,6 +102,8 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
                 value_ug_m3=value,
             )
             created_count += int(created)
+
+        # Mark job as succeeded in audit table
         runs.mark_succeeded(run)
         events.record(
             component="pm25_ingestion",
@@ -83,6 +117,7 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
         session.commit()
         return True
     except (InputValidationError, ProviderError):
+        # Gracefully handle validation failure or network timeout
         runs.mark_failed(run, "PM2.5 ingestion failed.")
         events.record(
             component="pm25_ingestion",
@@ -94,11 +129,20 @@ def _ingest_pm25(session, location_id, settings: Settings) -> bool:
 
 
 def _ingest_weather(session, location_id, settings: Settings) -> bool:
+    """
+    Fetch, validate, and store 8 meteorological parameters from Open-Meteo API.
+
+    Parameters:
+    - Temperature, Humidity, Wind Speed, Dew Point, Surface Pressure, Precipitation,
+      Shortwave Solar Radiation, Wind Direction.
+    """
     runs = IngestionRunRepository(session)
     events = SystemEventRepository(session)
     run = runs.start("weather")
     try:
         readings = OpenMeteoAdapter(settings).hourly_weather()
+
+        # Validate all physical weather boundaries
         validated_readings = [
             (
                 reading,
@@ -116,6 +160,8 @@ def _ingest_weather(session, location_id, settings: Settings) -> bool:
             )
             for reading in readings
         ]
+
+        # Store weather records in database
         repository = WeatherRecordRepository(session)
         created_count = 0
         for reading, values in validated_readings:
@@ -133,6 +179,8 @@ def _ingest_weather(session, location_id, settings: Settings) -> bool:
                 wind_direction_degrees=values[7],
             )
             created_count += int(created)
+
+        # Mark job as succeeded
         runs.mark_succeeded(run)
         events.record(
             component="weather_ingestion",
@@ -146,6 +194,7 @@ def _ingest_weather(session, location_id, settings: Settings) -> bool:
         session.commit()
         return True
     except (InputValidationError, ProviderError):
+        # Gracefully handle failure
         runs.mark_failed(run, "Weather ingestion failed.")
         events.record(
             component="weather_ingestion",

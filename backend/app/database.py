@@ -1,4 +1,8 @@
-"""Database engine, session, and readiness helpers."""
+"""Database connection and session management module.
+
+This module sets up SQLAlchemy connection pooling to PostgreSQL, provides
+a factory for creating database sessions, and includes health check helpers.
+"""
 
 from collections.abc import Generator
 from functools import lru_cache
@@ -12,18 +16,30 @@ from .config import get_settings
 
 @lru_cache
 def get_engine():
-    """Create the shared synchronous PostgreSQL engine."""
+    """Create and cache the synchronous PostgreSQL engine.
+
+    'pool_pre_ping=True' checks if connections in the pool are still alive
+    before using them, preventing stale connection errors.
+    """
     return create_engine(get_settings().database_url, pool_pre_ping=True)
 
 
 @lru_cache
 def get_session_factory() -> sessionmaker[Session]:
-    """Create the shared session factory for future repositories."""
+    """Create and cache the SQLAlchemy sessionmaker factory.
+
+    Configured with autoflush=False and autocommit=False to ensure explicit,
+    safe transaction management across repositories.
+    """
     return sessionmaker(bind=get_engine(), autoflush=False, autocommit=False)
 
 
 def get_database_session() -> Generator[Session, None, None]:
-    """Provide one database session and close it after use."""
+    """FastAPI dependency that yields a database session for an HTTP request.
+
+    The session is automatically closed in the 'finally' block when the
+    request finishes, preventing connection leaks.
+    """
     session = get_session_factory()()
     try:
         yield session
@@ -32,7 +48,10 @@ def get_database_session() -> Generator[Session, None, None]:
 
 
 def check_database_connection() -> bool:
-    """Return whether PostgreSQL accepts a lightweight query."""
+    """Execute a lightweight SQL query (SELECT 1) to test database readiness.
+
+    Used by the /health/database endpoint to confirm PostgreSQL is operational.
+    """
     try:
         with get_engine().connect() as connection:
             connection.execute(text("SELECT 1"))

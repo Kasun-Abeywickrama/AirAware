@@ -1,4 +1,8 @@
-"""Queries and inserts for saved PM2.5 forecasts."""
+"""Repository for saving and querying PM2.5 forecasts and XAI explanations.
+
+Handles forecast horizon persistence (+1h, +6h, +24h), conformal intervals,
+feature importance attributions, and time-range queries for dashboards and planners.
+"""
 
 from datetime import datetime
 from decimal import Decimal
@@ -13,7 +17,7 @@ from ..models.forecast_run import ForecastRun
 
 
 class ForecastRepository:
-    """Store forecast outputs after the full run has passed validation."""
+    """Data access layer for the 'forecasts' and 'forecast_explanations' tables."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -28,6 +32,7 @@ class ForecastRepository:
         lower_bound_ug_m3: Decimal,
         upper_bound_ug_m3: Decimal,
     ) -> Forecast:
+        """Insert a single horizon forecast point with conformal uncertainty intervals."""
         forecast = Forecast(
             forecast_run_id=forecast_run_id,
             horizon_hours=horizon_hours,
@@ -41,6 +46,7 @@ class ForecastRepository:
         return forecast
 
     def list_for_run(self, forecast_run_id: UUID) -> list[Forecast]:
+        """Fetch all horizon forecasts (+1h, +6h, +24h) belonging to a specific run."""
         statement = (
             select(Forecast)
             .where(Forecast.forecast_run_id == forecast_run_id)
@@ -57,7 +63,7 @@ class ForecastRepository:
         completeness_error_ug_m3: Decimal,
         factors: list[dict],
     ) -> ForecastExplanation:
-        """Save the validated factor-level explanation for a forecast."""
+        """Insert Explainable AI (XAI) feature importance factors for a forecast point."""
         explanation = ForecastExplanation(
             forecast_id=forecast_id,
             method=method,
@@ -70,7 +76,7 @@ class ForecastRepository:
         return explanation
 
     def explanations_for_forecasts(self, forecast_ids: list[UUID]) -> dict[UUID, ForecastExplanation]:
-        """Load explanations in one query, keyed by their forecast."""
+        """Fetch explanations in a single batch query, returned as a dictionary keyed by forecast_id."""
         if not forecast_ids:
             return {}
         statement = select(ForecastExplanation).where(ForecastExplanation.forecast_id.in_(forecast_ids))
@@ -79,7 +85,7 @@ class ForecastRepository:
     def list_since(
         self, since: datetime, location_id: UUID | None = None
     ) -> list[tuple[Forecast, ForecastRun]]:
-        """Return forecast outputs with their issue times for a recent history view."""
+        """Fetch chronological forecasts generated since a specific timestamp for history charts."""
         statement = (
             select(Forecast, ForecastRun)
             .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
@@ -89,6 +95,7 @@ class ForecastRepository:
             statement = statement.where(ForecastRun.location_id == location_id)
         statement = statement.order_by(Forecast.target_at, ForecastRun.issued_at.desc())
         results = list(self._session.execute(statement).all())
+        # Fallback query for runs generated before location_id was populated
         if not results and location_id is not None:
             fallback_stmt = (
                 select(Forecast, ForecastRun)
@@ -106,7 +113,10 @@ class ForecastRepository:
     def list_for_target_range(
         self, *, start_at: datetime, end_at: datetime, location_id: UUID | None = None
     ) -> list[tuple[Forecast, ForecastRun]]:
-        """Return successful forecasts within a target-time range."""
+        """Fetch successful forecasts whose target time falls within [start_at, end_at).
+
+        Used by the Activity Planner to find candidate windows across a target day.
+        """
         statement = (
             select(Forecast, ForecastRun)
             .join(ForecastRun, Forecast.forecast_run_id == ForecastRun.id)
